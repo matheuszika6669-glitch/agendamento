@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento de Quadra - Clube de Sócios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'club-green': '#22c55e',
+                        'club-green-dark': '#16a34a',
+                        'club-gray': '#6b7280'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .day-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .day-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            border-color: #22c55e;
+        }
+        .day-card.selected {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+        .day-header {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        .day-date {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 12px;
+        }
+        .day-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-available { background-color: #22c55e; }
+        .status-partial { background-color: #f59e0b; }
+        .status-full { background-color: #ef4444; }
+        .status-closed { background-color: #6b7280; }
+        
+        .time-slots-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            padding: 20px 0;
+        }
+        .time-slot {
+            padding: 16px 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .time-slot.available {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            color: #15803d;
+            border-color: #22c55e;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+        }
+        .time-slot.available:hover {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #16a34a;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.25);
+        }
+        .time-slot.occupied {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            color: #dc2626;
+            cursor: not-allowed;
+            border-color: #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+        }
+        .time-slot.user-booking {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            cursor: pointer;
+            border-color: #15803d;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        .time-slot.user-booking:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+        }
+        .time-slot.blocked {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #d97706;
+            cursor: not-allowed;
+            border-color: #f59e0b;
+        }
+        .time-slot.past {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            color: #94a3b8;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+        }
+        
+        .day-tab {
+            padding: 16px 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e2e8f0;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-width: 100px;
+        }
+        .day-tab:hover {
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+            color: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .day-tab.active {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            border-color: #15803d;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+        }
+        .day-tab.blocked {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #d97706;
+            cursor: not-allowed;
+            border-color: #f59e0b;
+        }
+        .day-tab.past {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            color: #94a3b8;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="https://i.postimg.cc/562NxnCj/logo.jpg" alt="Logo do Clube" class="h-12 w-12 rounded-full object-cover" onerror="this.src=''; this.alt='Logo não disponível'; this.style.display='none';">
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-800">Agendamento de Quadra</h1>
+                </div>
+                <button id="homeBtn" class="text-club-green hover:text-club-green-dark font-medium">
+                    ← Início
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 min-h-[calc(100vh-140px)]">
+        <!-- Home Page -->
+        <div id="homePage" class="fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Clube de Sócios</h2>
+                <p class="text-lg text-gray-600">Sistema de agendamento da quadra de tênis</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+                <button id="memberBtn" class="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-club-green">
+                    <div class="text-4xl mb-4">🎾</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Área do Sócio</h3>
+                    <p class="text-gray-600">Faça seu agendamento da quadra</p>
+                </button>
+                
+                <button id="adminBtn" class="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition-shadow border-2 border-transparent hover:border-club-green">
+                    <div class="text-4xl mb-4">⚙️</div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Área do Gestor</h3>
+                    <p class="text-gray-600">Gerencie os agendamentos</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Login -->
+        <div id="adminLogin" class="hidden fade-in">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Login do Gestor</h2>
+                
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Usuário</label>
+                        <input type="text" id="username" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-club-green focus:border-transparent" placeholder="Digite seu usuário">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+                        <input type="password" id="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-club-green focus:border-transparent" placeholder="Digite sua senha">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-club-green text-white py-3 rounded-lg hover:bg-club-green-dark transition-colors font-medium">
+                        Entrar
+                    </button>
+                </form>
+                
+                <div class="mt-4 p-3 bg-gray-100 rounded text-sm text-gray-600">
+                    <strong>Demo:</strong> usuário: admin | senha: admin
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Access -->
+        <div id="memberAccess" class="hidden fade-in">
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Acesso do Sócio</h2>
+                
+                <form id="memberForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
+                        <input type="text" id="memberName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-club-green focus:border-transparent" placeholder="Digite seu nome completo">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CPF</label>
+                        <input type="text" id="memberCpf" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-club-green focus:border-transparent" placeholder="000.000.000-00" maxlength="14">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-club-green text-white py-3 rounded-lg hover:bg-club-green-dark transition-colors font-medium">
+                        Acessar Agenda
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="hidden fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                <h2 class="text-2xl font-bold text-gray-800">Painel do Gestor</h2>
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                    <button id="openWeekBtn" class="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-emerald-400">
+                        🔓 Abrir Agenda
+                    </button>
+                    <button id="closeCurrentWeekBtn" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-red-400">
+                        🔒 Fechar Semana Atual
+                    </button>
+                    <button id="closeNextWeekBtn" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-amber-400">
+                        🔒 Fechar Próxima Semana
+                    </button>
+                    <input type="text" id="adminSearch" placeholder="Buscar por nome ou CPF" class="px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-club-green focus:border-club-green transition-all duration-300 shadow-sm">
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="prevWeekAdmin" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-blue-400">
+                        ← Semana Anterior
+                    </button>
+                    <h3 id="currentWeekAdmin" class="text-xl font-bold text-gray-800 bg-gradient-to-r from-white to-gray-50 px-8 py-4 rounded-xl shadow-lg border-2 border-gray-200"></h3>
+                    <button id="nextWeekAdmin" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-blue-400">
+                        Próxima Semana →
+                    </button>
+                </div>
+                
+                <!-- Day Tabs -->
+                <div class="flex flex-wrap gap-2 mb-6 border-b">
+                    <div id="adminDayTabs" class="flex flex-wrap gap-2"></div>
+                </div>
+                
+                <!-- Time Slots -->
+                <div id="adminTimeSlots" class="time-slots-grid"></div>
+            </div>
+        </div>
+
+        <!-- Member Panel -->
+        <div id="memberPanel" class="hidden fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Agenda da Quadra</h2>
+                    <p class="text-gray-600" id="memberWelcome"></p>
+                </div>
+                <input type="text" id="memberSearch" placeholder="Buscar por CPF" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-club-green focus:border-transparent">
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <button id="prevWeekMember" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-blue-400">
+                        ← Semana Anterior
+                    </button>
+                    <h3 id="currentWeekMember" class="text-xl font-bold text-gray-800 bg-gradient-to-r from-white to-gray-50 px-8 py-4 rounded-xl shadow-lg border-2 border-gray-200"></h3>
+                    <button id="nextWeekMember" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-2xl transform hover:-translate-y-1 hover:scale-105 border border-blue-400">
+                        Próxima Semana →
+                    </button>
+                </div>
+                
+                <!-- Day Tabs -->
+                <div class="flex flex-wrap gap-2 mb-6 border-b">
+                    <div id="memberDayTabs" class="flex flex-wrap gap-2"></div>
+                </div>
+                
+                <!-- Time Slots -->
+                <div id="memberTimeSlots" class="time-slots-grid"></div>
+            </div>
+            
+            <div id="memberBookings" class="mt-6 bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Seus Agendamentos</h3>
+                <div id="bookingsList"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white mt-auto">
+        <div class="max-w-6xl mx-auto px-4 py-8">
+            <!-- Main Footer Content -->
+            <div class="grid md:grid-cols-2 gap-8 mb-6">
+                <!-- Developers Section -->
+                <div class="text-center md:text-left">
+                    <h3 class="text-xl font-bold mb-4 text-club-green">👨‍💻 Desenvolvedores</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-center md:justify-start space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                LF
+                            </div>
+                            <div>
+                                <p class="font-semibold text-lg">Lucas Fragozo</p>
+                                <p class="text-sm text-gray-300">Full Stack Developer</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-center md:justify-start space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                FL
+                            </div>
+                            <div>
+                                <p class="font-semibold text-lg">Filipe Lessa</p>
+                                <p class="text-sm text-gray-300">Frontend Specialist</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact & Links -->
+                <div class="text-center md:text-right">
+                    <h3 class="text-xl font-bold mb-4 text-club-green">📞 Contato</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-center md:justify-end space-x-4">
+                            <a href="#" class="w-12 h-12 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
+                                <span class="text-white font-bold">Li</span>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
+                                <span class="text-white font-bold">Git</span>
+                            </a>
+                            <a href="#" class="w-12 h-12 bg-purple-600 hover:bg-purple-700 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg">
+                                <span class="text-white font-bold">@</span>
+                            </a>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-gray-300 flex items-center justify-center md:justify-end space-x-2">
+                                <span>📧</span>
+                                <span>contato@clubedesociosdev.com</span>
+                            </p>
+                            <p class="text-gray-300 flex items-center justify-center md:justify-end space-x-2">
+                                <span>📞</span>
+                                <span>(11) 99999-9999</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Copyright -->
+            <div class="border-t border-gray-700 pt-6 text-center">
+                <p class="text-gray-300 text-lg">
+                    © 2024 <span class="text-club-green font-bold">Clube de Sócios</span> - Sistema de Agendamento
+                </p>
+                <p class="text-sm text-gray-400 mt-2">
+                    Todos os direitos reservados. Desenvolvido com ❤️ no Brasil
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-800 mb-4"></h3>
+            <div id="modalContent" class="mb-6"></div>
+            <div class="flex space-x-4">
+                <button id="modalCancel" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors">Cancelar</button>
+                <button id="modalConfirm" class="flex-1 bg-club-green text-white py-2 rounded-lg hover:bg-club-green-dark transition-colors">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentUser = null;
+        let currentWeek = new Date();
+        let selectedDay = null;
+        let bookings = JSON.parse(localStorage.getItem('tennisBookings') || '[]');
+        let weeklyScheduleOpen = JSON.parse(localStorage.getItem('weeklyScheduleOpen') || '{}');
+        
+        // Utility functions
+        function formatCPF(cpf) {
+            return cpf.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+        
+        function validateCPF(cpf) {
+            const cleanCPF = cpf.replace(/\D/g, '');
+            return cleanCPF.length === 11;
+        }
+        
+        function isValidCPF(cpf) {
+            const cleanCPF = cpf.replace(/\D/g, '');
+            
+            if (cleanCPF.length !== 11) return false;
+            
+            // Verifica se todos os dígitos são iguais
+            if (/^(\d)\1{10}$/.test(cleanCPF)) return false;
+            
+            // Validação do primeiro dígito verificador
+            let sum = 0;
+            for (let i = 0; i < 9; i++) {
+                sum += parseInt(cleanCPF.charAt(i)) * (10 - i);
+            }
+            let remainder = 11 - (sum % 11);
+            if (remainder === 10 || remainder === 11) remainder = 0;
+            if (remainder !== parseInt(cleanCPF.charAt(9))) return false;
+            
+            // Validação do segundo dígito verificador
+            sum = 0;
+            for (let i = 0; i < 10; i++) {
+                sum += parseInt(cleanCPF.charAt(i)) * (11 - i);
+            }
+            remainder = 11 - (sum % 11);
+            if (remainder === 10 || remainder === 11) remainder = 0;
+            if (remainder !== parseInt(cleanCPF.charAt(10))) return false;
+            
+            return true;
+        }
+        
+        function getWeekKey(date) {
+            const monday = new Date(date);
+            // Ajusta para segunda-feira da semana
+            const dayOfWeek = monday.getDay();
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Se domingo, volta 6 dias; senão, vai para segunda
+            monday.setDate(monday.getDate() + diff);
+            return monday.toISOString().split('T')[0];
+        }
+        
+        function isCurrentWeek(date) {
+            const now = new Date();
+            const weekKey = getWeekKey(date);
+            const currentWeekKey = getWeekKey(now);
+            return weekKey === currentWeekKey;
+        }
+        
+        function isWeekOpen(date) {
+            const now = new Date();
+            const weekKey = getWeekKey(date);
+            const currentWeekKey = getWeekKey(now);
+            
+            // Semana atual sempre aberta (segunda a domingo)
+            if (weekKey === currentWeekKey) {
+                return true;
+            }
+            
+            // Calcula a próxima semana (próxima segunda-feira)
+            const nextWeekStart = new Date(now);
+            const currentDay = now.getDay(); // 0 = domingo, 1 = segunda, etc.
+            
+            // Calcula quantos dias até a próxima segunda-feira
+            let daysToNextMonday;
+            if (currentDay === 0) { // Se hoje é domingo
+                daysToNextMonday = 1; // Próxima segunda é amanhã
+            } else { // Se hoje é segunda a sábado
+                daysToNextMonday = 8 - currentDay; // Dias até a próxima segunda
+            }
+            
+            nextWeekStart.setDate(now.getDate() + daysToNextMonday);
+            const nextWeekKey = getWeekKey(nextWeekStart);
+            
+            if (weekKey === nextWeekKey) {
+                // Próxima semana só abre no domingo às 18h
+                const isDomingo = now.getDay() === 0;
+                const isAfter18h = now.getHours() >= 18;
+                
+                return isDomingo && isAfter18h;
+            }
+            
+            // Semanas futuras (além da próxima) ficam bloqueadas até serem abertas manualmente
+            return weeklyScheduleOpen[weekKey] || false;
+        }
+        
+        function openWeekSchedule(date) {
+            const weekKey = getWeekKey(date);
+            weeklyScheduleOpen[weekKey] = true;
+            localStorage.setItem('weeklyScheduleOpen', JSON.stringify(weeklyScheduleOpen));
+        }
+        
+        function closeWeekSchedule(date) {
+            const weekKey = getWeekKey(date);
+            weeklyScheduleOpen[weekKey] = false;
+            localStorage.setItem('weeklyScheduleOpen', JSON.stringify(weeklyScheduleOpen));
+        }
+        
+        function getWeekDates(date) {
+            const monday = new Date(date);
+            // Ajusta para segunda-feira da semana
+            const dayOfWeek = monday.getDay();
+            const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Se domingo, volta 6 dias; senão, vai para segunda
+            monday.setDate(monday.getDate() + diff);
+            
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(monday);
+                day.setDate(monday.getDate() + i);
+                dates.push(day);
+            }
+            return dates;
+        }
+        
+        function formatDate(date) {
+            return date.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit' 
+            });
+        }
+        
+        function formatWeekRange(dates) {
+            const start = formatDate(dates[0]);
+            const end = formatDate(dates[6]);
+            return `${start} - ${end}`;
+        }
+        
+        // Auto-open current week schedule
+        function autoOpenCurrentWeek() {
+            const now = new Date();
+            openWeekSchedule(now);
+        }
+        
+        // Initialize auto-opening
+        autoOpenCurrentWeek();
+        
+        // Page navigation
+        function showPage(pageId) {
+            document.querySelectorAll('main > div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+        
+        // Render day tabs
+        function renderDayTabs(containerId, isAdmin = false) {
+            const container = document.getElementById(containerId);
+            const dates = getWeekDates(currentWeek);
+            const dayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+            
+            let html = '';
+            
+            dates.forEach((date, index) => {
+                const dateStr = date.toISOString().split('T')[0];
+                const isPast = date < new Date().setHours(0,0,0,0);
+                const isCurrentWeekOpen = isWeekOpen(date);
+                const isBlocked = !isAdmin && !isCurrentWeekOpen;
+                
+                let tabClass = 'day-tab';
+                let onclick = '';
+                
+                if (isPast) {
+                    tabClass += ' past';
+                } else if (isBlocked) {
+                    tabClass += ' blocked';
+                } else {
+                    onclick = `selectDay('${dateStr}', ${isAdmin})`;
+                }
+                
+                if (selectedDay === dateStr) {
+                    tabClass += ' active';
+                }
+                
+                html += `
+                    <div class="${tabClass}" ${onclick ? `onclick="${onclick}"` : ''}>
+                        ${dayNames[index]}<br>
+                        <small>${formatDate(date)}</small>
+                        ${isBlocked && !isPast ? '<br><small class="text-xs">🔒 Bloqueado</small>' : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Select day and render time slots
+        function selectDay(dateStr, isAdmin = false) {
+            selectedDay = dateStr;
+            renderDayTabs(isAdmin ? 'adminDayTabs' : 'memberDayTabs', isAdmin);
+            renderTimeSlots(isAdmin ? 'adminTimeSlots' : 'memberTimeSlots', dateStr, isAdmin);
+        }
+        
+        // Time slots rendering for selected day
+        function renderTimeSlots(containerId, selectedDate, isAdmin = false) {
+            const container = document.getElementById(containerId);
+            const hours = [];
+            
+            for (let h = 8; h <= 21; h++) {
+                hours.push(`${h.toString().padStart(2, '0')}:00`);
+            }
+            
+            let html = '';
+            
+            hours.forEach(hour => {
+                const timeSlot = `${selectedDate} ${hour}`;
+                const booking = bookings.find(b => b.dateTime === timeSlot);
+                const isPast = new Date(`${selectedDate}T${hour}:00`) < new Date();
+                const canBook = !isAdmin && !isPast;
+                
+                let slotClass = 'time-slot';
+                let content = `<div class="text-lg font-bold">${hour}</div>`;
+                let onclick = '';
+                
+                if (isPast) {
+                    slotClass += ' past';
+                    content += '<div class="text-xs mt-1 opacity-75">⏰ Passado</div>';
+                } else if (booking) {
+                    const isUserBooking = !isAdmin && currentUser && booking.cpf === currentUser.cpf;
+                    if (isUserBooking) {
+                        slotClass += ' occupied';
+                        content += '<div class="text-xs mt-1">✅ Seu agendamento</div>';
+                        onclick = `showBookingOptions('${timeSlot}')`;
+                    } else {
+                        slotClass += ' occupied';
+                        if (isAdmin) {
+                            content += `<div class="text-xs mt-1">👤 ${booking.name}</div>`;
+                            content += `<div class="text-xs mt-1">📄 ${formatCPF(booking.cpf)}</div>`;
+                            onclick = `showBookingOptions('${timeSlot}')`;
+                        } else {
+                            content += '<div class="text-xs mt-1">❌ Ocupado</div>';
+                        }
+                    }
+                } else {
+                    if (canBook) {
+                        slotClass += ' available';
+                        content += '<div class="text-xs mt-1">🎾 Disponível</div>';
+                        onclick = `bookSlot('${timeSlot}')`;
+                    } else if (isAdmin) {
+                        slotClass += ' available';
+                        content += '<div class="text-xs mt-1">🎾 Disponível</div>';
+                    } else {
+                        slotClass += ' available';
+                        content += '<div class="text-xs mt-1">🎾 Disponível</div>';
+                    }
+                }
+                
+                html += `<div class="${slotClass}" ${onclick ? `onclick="${onclick}"` : ''}>${content}</div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Booking functions
+        function bookSlot(timeSlot) {
+            if (!currentUser) return;
+            
+            const [date, time] = timeSlot.split(' ');
+            const dateObj = new Date(`${date}T${time}:00`);
+            
+            // Verifica se já existe um agendamento neste horário (qualquer pessoa)
+            const existingBooking = bookings.find(b => b.dateTime === timeSlot);
+            if (existingBooking) {
+                alert('Este horário já está ocupado.');
+                return;
+            }
+            
+            showModal(
+                'Confirmar Agendamento',
+                `Deseja agendar a quadra para ${dateObj.toLocaleDateString('pt-BR')} às ${time}?`,
+                () => {
+                    // Verifica novamente antes de confirmar
+                    const doubleCheck = bookings.find(b => b.dateTime === timeSlot);
+                    if (doubleCheck) {
+                        alert('Este horário foi ocupado por outro usuário.');
+                        return;
+                    }
+                    
+                    bookings.push({
+                        id: Date.now(),
+                        name: currentUser.name,
+                        cpf: currentUser.cpf,
+                        dateTime: timeSlot
+                    });
+                    
+                    localStorage.setItem('tennisBookings', JSON.stringify(bookings));
+                    
+                    // Atualiza a visualização
+                    if (selectedDay) {
+                        renderTimeSlots('memberTimeSlots', selectedDay, false);
+                    }
+                    updateMemberBookings();
+                    
+                    alert(`Reserva confirmada para ${dateObj.toLocaleDateString('pt-BR')} às ${time}.`);
+                }
+            );
+        }
+        
+        function showBookingOptions(timeSlot) {
+            const booking = bookings.find(b => b.dateTime === timeSlot);
+            if (!booking) return;
+            
+            const [date, time] = timeSlot.split(' ');
+            const dateObj = new Date(`${date}T${time}:00`);
+            const isAdmin = document.getElementById('adminPanel').classList.contains('hidden') === false;
+            const isUserBooking = currentUser && booking.cpf === currentUser.cpf;
+            
+            if (isAdmin || isUserBooking) {
+                const actions = isAdmin ? 
+                    `<button onclick="cancelBooking('${timeSlot}')" class="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 font-semibold">🗑️ Excluir Agendamento</button>` :
+                    `<button onclick="cancelBooking('${timeSlot}')" class="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 font-semibold">❌ Cancelar Agendamento</button>`;
+                
+                showModal(
+                    'Detalhes do Agendamento',
+                    `<div class="text-center mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                            <strong class="text-lg">${booking.name}</strong><br>
+                            <span class="text-gray-600">${dateObj.toLocaleDateString('pt-BR')} às ${time}</span><br>
+                            <span class="text-sm text-gray-500">CPF: ${formatCPF(booking.cpf)}</span>
+                        </div>
+                        ${actions}
+                    </div>`,
+                    null,
+                    true
+                );
+            }
+        }
+        
+        function cancelBooking(timeSlot) {
+            const booking = bookings.find(b => b.dateTime === timeSlot);
+            if (!booking) return;
+            
+            showModal(
+                'Confirmar Cancelamento',
+                'Tem certeza que deseja cancelar este agendamento?',
+                () => {
+                    bookings = bookings.filter(b => b.dateTime !== timeSlot);
+                    localStorage.setItem('tennisBookings', JSON.stringify(bookings));
+                    
+                    const isAdmin = document.getElementById('adminPanel').classList.contains('hidden') === false;
+                    
+                    // Refresh current view
+                    if (selectedDay) {
+                        renderTimeSlots(isAdmin ? 'adminTimeSlots' : 'memberTimeSlots', selectedDay, isAdmin);
+                    }
+                    
+                    if (!isAdmin) {
+                        updateMemberBookings();
+                    }
+                    
+                    alert('Reserva cancelada. Horário liberado.');
+                }
+            );
+        }
+        
+
+        
+        // Modal functions
+        function showModal(title, content, onConfirm, customActions = false) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalContent').innerHTML = content;
+            
+            if (customActions) {
+                document.getElementById('modalCancel').style.display = 'block';
+                document.getElementById('modalConfirm').style.display = 'none';
+            } else {
+                document.getElementById('modalCancel').style.display = 'block';
+                document.getElementById('modalConfirm').style.display = 'block';
+                document.getElementById('modalConfirm').onclick = () => {
+                    if (onConfirm) onConfirm();
+                    hideModal();
+                };
+            }
+            
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        function hideModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+        
+        // Member bookings
+        function updateMemberBookings() {
+            if (!currentUser) return;
+            
+            const userBookings = bookings.filter(b => b.cpf === currentUser.cpf);
+            const container = document.getElementById('bookingsList');
+            
+            if (userBookings.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">Você não possui agendamentos.</p>';
+                return;
+            }
+            
+            let html = '';
+            userBookings.forEach(booking => {
+                const [date, time] = booking.dateTime.split(' ');
+                const dateObj = new Date(`${date}T${time}:00`);
+                
+                html += `
+                    <div class="flex justify-between items-center p-4 border rounded-lg mb-2">
+                        <div>
+                            <strong>${dateObj.toLocaleDateString('pt-BR')}</strong> às ${time}
+                        </div>
+                        <div>
+                            <button onclick="cancelBooking('${booking.dateTime}')" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 font-semibold">❌ Cancelar</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // Week navigation
+        function changeWeek(direction, isAdmin = false) {
+            const newWeek = new Date(currentWeek);
+            newWeek.setDate(currentWeek.getDate() + (direction * 7));
+            currentWeek = newWeek;
+            selectedDay = null; // Reset selected day
+            
+            const dates = getWeekDates(currentWeek);
+            const weekRange = formatWeekRange(dates);
+            
+            if (isAdmin) {
+                document.getElementById('currentWeekAdmin').textContent = weekRange;
+                renderDayTabs('adminDayTabs', true);
+                document.getElementById('adminTimeSlots').innerHTML = '<p class="text-gray-500 text-center py-8">Selecione um dia da semana para ver os horários</p>';
+            } else {
+                document.getElementById('currentWeekMember').textContent = weekRange;
+                renderDayTabs('memberDayTabs', false);
+                document.getElementById('memberTimeSlots').innerHTML = '<p class="text-gray-500 text-center py-8">Selecione um dia da semana para ver os horários</p>';
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('homeBtn').addEventListener('click', () => {
+            showPage('homePage');
+            currentUser = null;
+        });
+        
+        document.getElementById('memberBtn').addEventListener('click', () => {
+            showPage('memberAccess');
+        });
+        
+        document.getElementById('adminBtn').addEventListener('click', () => {
+            showPage('adminLogin');
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin') {
+                showPage('adminPanel');
+                currentWeek = new Date();
+                selectedDay = null;
+                const dates = getWeekDates(currentWeek);
+                document.getElementById('currentWeekAdmin').textContent = formatWeekRange(dates);
+                renderDayTabs('adminDayTabs', true);
+                document.getElementById('adminTimeSlots').innerHTML = '<p class="text-gray-500 text-center py-8">Selecione um dia da semana para ver os horários</p>';
+            } else {
+                alert('Credenciais inválidas!');
+            }
+        });
+        
+        document.getElementById('memberForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('memberName').value.trim();
+            const cpf = document.getElementById('memberCpf').value.replace(/\D/g, '');
+            
+            if (name.split(' ').length < 2) {
+                alert('Por favor, digite seu nome completo (nome e sobrenome).');
+                return;
+            }
+            
+            if (!isValidCPF(cpf)) {
+                alert('Por favor, digite um CPF válido.');
+                return;
+            }
+            
+            currentUser = { name, cpf };
+            document.getElementById('memberWelcome').textContent = `Bem-vindo, ${name}`;
+            
+            showPage('memberPanel');
+            currentWeek = new Date();
+            selectedDay = null;
+            const dates = getWeekDates(currentWeek);
+            document.getElementById('currentWeekMember').textContent = formatWeekRange(dates);
+            renderDayTabs('memberDayTabs', false);
+            document.getElementById('memberTimeSlots').innerHTML = '<p class="text-gray-500 text-center py-8">Selecione um dia da semana para ver os horários</p>';
+            updateMemberBookings();
+        });
+        
+        // CPF mask and validation
+        document.getElementById('memberCpf').addEventListener('input', (e) => {
+            // Remove tudo que não é número
+            let value = e.target.value.replace(/\D/g, '');
+            
+            // Limita a 11 dígitos
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            
+            // Aplica a máscara
+            e.target.value = formatCPF(value);
+        });
+        
+        // Previne entrada de caracteres não numéricos
+        document.getElementById('memberCpf').addEventListener('keypress', (e) => {
+            const char = String.fromCharCode(e.which);
+            if (!/[0-9]/.test(char) && e.which !== 8 && e.which !== 0) {
+                e.preventDefault();
+            }
+        });
+        
+        // Week navigation buttons
+        document.getElementById('prevWeekAdmin').addEventListener('click', () => changeWeek(-1, true));
+        document.getElementById('nextWeekAdmin').addEventListener('click', () => changeWeek(1, true));
+        document.getElementById('prevWeekMember').addEventListener('click', () => changeWeek(-1, false));
+        document.getElementById('nextWeekMember').addEventListener('click', () => changeWeek(1, false));
+        
+        // Open week button
+        document.getElementById('openWeekBtn').addEventListener('click', () => {
+            openWeekSchedule(currentWeek);
+            renderDayTabs('adminDayTabs', true);
+            if (selectedDay) {
+                renderTimeSlots('adminTimeSlots', selectedDay, true);
+            }
+            alert('Agenda da semana aberta para agendamentos!');
+        });
+        
+        // Close current week button
+        document.getElementById('closeCurrentWeekBtn').addEventListener('click', () => {
+            const now = new Date();
+            closeWeekSchedule(now);
+            renderDayTabs('adminDayTabs', true);
+            if (selectedDay) {
+                renderTimeSlots('adminTimeSlots', selectedDay, true);
+            }
+            alert('Agenda da semana atual fechada para novos agendamentos!');
+        });
+        
+        // Close next week button
+        document.getElementById('closeNextWeekBtn').addEventListener('click', () => {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            closeWeekSchedule(nextWeek);
+            renderDayTabs('adminDayTabs', true);
+            if (selectedDay) {
+                renderTimeSlots('adminTimeSlots', selectedDay, true);
+            }
+            alert('Agenda da próxima semana fechada para novos agendamentos!');
+        });
+        
+        // Modal close
+        document.getElementById('modalCancel').addEventListener('click', hideModal);
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal')) {
+                hideModal();
+            }
+        });
+        
+        // Search functionality
+        document.getElementById('adminSearch').addEventListener('input', (e) => {
+            // Basic search implementation - could be enhanced
+            const searchTerm = e.target.value.toLowerCase();
+            // This would filter the schedule display based on search term
+        });
+        
+        document.getElementById('memberSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.replace(/\D/g, '');
+            if (searchTerm.length >= 4) {
+                const userBookings = bookings.filter(b => b.cpf.includes(searchTerm));
+                // Highlight matching bookings in schedule
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9801013d50ca1719',t:'MTc1ODAzMjQyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
