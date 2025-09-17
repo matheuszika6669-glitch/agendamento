@@ -15,6 +15,7 @@ let selectedAdminDay = 0;
 
 // --- Inicialização ---
 async function initSystem() {
+    console.log("Iniciando o sistema...");
     const today = new Date();
     const dayOfWeek = today.getDay();
     const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -38,6 +39,7 @@ async function initSystem() {
 
 // --- Navegação de telas ---
 function showLoginScreen() {
+    console.log("Mostrando tela de login...");
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('memberLogin').classList.add('hidden');
     document.getElementById('adminLogin').classList.add('hidden');
@@ -46,11 +48,13 @@ function showLoginScreen() {
 }
 
 function showMemberLogin() {
+    console.log("Mostrando tela de login do sócio...");
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('memberLogin').classList.remove('hidden');
 }
 
 function showAdminLogin() {
+    console.log("Mostrando tela de login do administrador...");
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminLogin').classList.remove('hidden');
 }
@@ -95,6 +99,7 @@ function isValidCPF(cpf) {
 // --- Login Sócio ---
 async function memberLogin(event) {
     event.preventDefault();
+    console.log("Iniciando login do sócio...");
     const name = document.getElementById('memberName').value.trim();
     const cpf = document.getElementById('memberCPF').value.trim();
 
@@ -116,6 +121,9 @@ async function memberLogin(event) {
     }
 
     currentUser = member;
+    console.log("Membro encontrado:", currentUser);
+
+    // Exibe painel sócio
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('memberLogin').classList.add('hidden');
     document.getElementById('memberDashboard').classList.remove('hidden');
@@ -125,6 +133,7 @@ async function memberLogin(event) {
 // --- Login Admin ---
 async function adminLogin(event) {
     event.preventDefault();
+    console.log("Iniciando login do administrador...");
     const username = document.getElementById('adminUser').value;
     const password = document.getElementById('adminPass').value;
 
@@ -142,6 +151,9 @@ async function adminLogin(event) {
     }
 
     currentUser = admin;
+    console.log("Administrador autenticado:", currentUser);
+
+    // Exibe painel administrador
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminDashboard').classList.remove('hidden');
@@ -150,6 +162,7 @@ async function adminLogin(event) {
 
 // --- Logout ---
 function logout() {
+    console.log("Logout realizado...");
     currentUser = null;
     document.getElementById('memberName').value = '';
     document.getElementById('memberCPF').value = '';
@@ -160,6 +173,7 @@ function logout() {
 
 // --- Agenda Sócio ---
 async function updateScheduleDisplay() {
+    console.log("Atualizando exibição da agenda...");
     const weekDisplay = formatWeekDisplay(currentWeekStart);
     document.getElementById('currentWeekDisplay').textContent = weekDisplay;
     updateDayContent();
@@ -220,10 +234,12 @@ function openBookingModal(dayIndex, hour) {
     document.getElementById('bookingTime').textContent = hour;
     document.getElementById('bookingModal').classList.remove('hidden');
 }
+
 function closeBookingModal() {
     document.getElementById('bookingModal').classList.add('hidden');
     selectedSlot = null;
 }
+
 async function confirmBooking() {
     if (selectedSlot) {
         await supabase.from("bookings").insert([{
@@ -243,10 +259,12 @@ function openCancelModal(dayIndex, hour, bookingId) {
     document.getElementById('cancelTime').textContent = hour;
     document.getElementById('cancelModal').classList.remove('hidden');
 }
+
 function closeCancelModal() {
     document.getElementById('cancelModal').classList.add('hidden');
     selectedSlot = null;
 }
+
 async function confirmCancel() {
     if (selectedSlot) {
         await supabase.from("bookings").delete().eq("id", selectedSlot.bookingId);
@@ -258,10 +276,12 @@ async function confirmCancel() {
 
 // --- Agenda Admin ---
 async function updateAdminScheduleDisplay() {
+    console.log("Atualizando exibição da agenda do administrador...");
     const weekDisplay = formatWeekDisplay(currentWeekStart);
     document.getElementById('adminCurrentWeekDisplay').textContent = weekDisplay;
     updateAdminDayContent();
 }
+
 async function selectAdminDay(dayIndex) {
     selectedAdminDay = dayIndex;
     document.querySelectorAll('.admin-day-tab').forEach((tab, index) => {
@@ -271,6 +291,7 @@ async function selectAdminDay(dayIndex) {
     });
     updateAdminDayContent();
 }
+
 async function updateAdminDayContent() {
     const container = document.getElementById('adminTimeSlots');
     container.innerHTML = '';
@@ -329,6 +350,7 @@ function toggleBlockMode() {
 function getWeekKey() {
     return currentWeekStart.toISOString().split('T')[0];
 }
+
 function formatWeekDisplay(weekStart) {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
