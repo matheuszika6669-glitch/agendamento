@@ -1,6 +1,6 @@
 // 🔗 Configuração do Supabase
-const SUPABASE_URL = "https://SEU-PROJETO.supabase.co"; // Troque
-const SUPABASE_ANON_KEY = "SUA-ANON-KEY"; // Troque
+const SUPABASE_URL = "https://tgilgszurykbamlrtfda.supabase.co"; // Troque
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnaWxnc3p1cnlrYmFtbHJ0ZmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNjkyMDYsImV4cCI6MjA3MzY0NTIwNn0.Y9a2i9KOao_pCQYui67iZWWNGz12jtMevmqaP2Md-Yw"; // Troque
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Variáveis globais
