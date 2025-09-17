@@ -1,6 +1,6 @@
 // 🔗 Configuração do Supabase
-const SUPABASE_URL = "https://tgilgszurykbamlrtfda.supabase.co"; // Troque
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnaWxnc3p1cnlrYmFtbHJ0ZmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNjkyMDYsImV4cCI6MjA3MzY0NTIwNn0.Y9a2i9KOao_pCQYui67iZWWNGz12jtMevmqaP2Md-Yw"; // Troque
+const SUPABASE_URL = "https://SEU-PROJETO.supabase.co"; // Troque
+const SUPABASE_ANON_KEY = "SUA-ANON-KEY"; // Troque
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Variáveis globais
@@ -119,18 +119,23 @@ async function memberLogin(event) {
 
         if (insertError) {
             console.error("Erro ao inserir novo membro:", insertError);
+            return; // Impede continuar com o fluxo em caso de erro
         } else {
             member = newMember;
         }
     }
 
-    currentUser = member;
-    isAdmin = false;
-    currentWeekStart = new Date(activeWeekStart);
-    document.getElementById('currentMemberName').textContent = member.name;
-    document.getElementById('memberLogin').classList.add('hidden');
-    document.getElementById('memberDashboard').classList.remove('hidden');
-    updateScheduleDisplay();
+    if (member && member.name) {
+        currentUser = member;
+        isAdmin = false;
+        currentWeekStart = new Date(activeWeekStart);
+        document.getElementById('currentMemberName').textContent = member.name;
+        document.getElementById('memberLogin').classList.add('hidden');
+        document.getElementById('memberDashboard').classList.remove('hidden');
+        updateScheduleDisplay();
+    } else {
+        console.error("Membro não encontrado ou erro na resposta.");
+    }
 }
 
 // --- Login Admin ---
@@ -138,13 +143,19 @@ async function adminLogin(event) {
     event.preventDefault();
     const user = document.getElementById('adminUser').value;
     const pass = document.getElementById('adminPass').value;
-    let { data: admin } = await supabase
+    let { data: admin, error } = await supabase
         .from("admins")
         .select("*")
         .eq("username", user)
         .eq("password", pass)
         .maybeSingle();
-    
+
+    if (error) {
+        console.error("Erro ao autenticar administrador:", error);
+        alert('Erro ao autenticar administrador.');
+        return;
+    }
+
     if (admin) {
         currentUser = { name: 'Administrador' };
         isAdmin = true;
@@ -153,6 +164,7 @@ async function adminLogin(event) {
         updateAdminScheduleDisplay();
     } else {
         alert('Usuário ou senha incorretos!');
+        console.error("Falha no login do administrador: credenciais inválidas.");
     }
 }
 
@@ -292,16 +304,57 @@ async function updateAdminDayContent() {
     const blocksMap = {};
     blocks?.forEach(b => blocksMap[`${b.day_of_week}-${b.hour}`] = b);
     hours.forEach(hour => {
-    const booking = bookings?.find(b => b.day_of_week === selectedAdminDay && b.hour === hour);
-    const isBlocked = blocksMap[`${selectedAdminDay}-${hour}`] !== undefined;  // Verificação mais robusta
-    const div = document.createElement('div');
-    div.className = 'p-3 rounded-lg border-2 text-center min-h-[80px] flex flex-col justify-center';
-    if (isBlocked) {
-        div.className += ' bg-gray-800';
-        div.className += ' text-white';  // Corrigido, o fechamento de aspas estava faltando aqui
-    }
-});
+        const booking = bookings?.find(b => b.day_of_week === selectedAdminDay && b.hour === hour);
+        const isBlocked = blocksMap[`${selectedAdminDay}-${hour}`];
+        const div = document.createElement('div');
+        div.className = 'p-3 rounded-lg border-2 text-center min-h-[80px] flex flex-col justify-center';
+        if (isBlocked) {
+            div.className += ' bg-gray-800 text-white';
+            div.innerHTML = `<div>${hour}</div><div>🚫 Bloqueado</div>`;
+            div.onclick = () => toggleBlockSlot(selectedAdminDay, hour, isBlocked.id);
+        } else if (booking) {
+            div.className += ' bg-red-500 text-white';
+            div.innerHTML = `<div>${hour}</div><div>${booking.members?.name}</div>`;
+        } else {
+            if (isBlockMode) {
+                div.className += ' bg-orange-500 text-white';
+                div.innerHTML = `<div>${hour}</div><div>Bloquear</div>`;
+                div.onclick = () => toggleBlockSlot(selectedAdminDay, hour);
+            } else {
+                div.className += ' bg-green-500 text-white';
+                div.innerHTML = `<div>${hour}</div><div>Disponível</div>`;
+            }
+        }
+        container.appendChild(div);
+    });
 }
 
+async function toggleBlockSlot(dayIndex, hour, blockId = null) {
+    if (blockId) {
+        await supabase.from("blocked_slots").delete().eq("id", blockId);
+    } else {
+        await supabase.from("blocked_slots").insert([{ day_of_week: dayIndex, hour }]);
+    }
+    updateAdminScheduleDisplay();
+}
 
+function toggleBlockMode() {
+    isBlockMode = !isBlockMode;
+    const btn = document.getElementById('blockModeBtn');
+    btn.textContent = isBlockMode ? 'Modo Bloqueio: ON' : 'Modo Bloqueio: OFF';
+    updateAdminScheduleDisplay();
+}
 
+// --- Utilitários ---
+function getWeekKey() {
+    return currentWeekStart.toISOString().split('T')[0];
+}
+function formatWeekDisplay(weekStart) {
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return `${weekStart.toLocaleDateString('pt-BR', options)} a ${weekEnd.toLocaleDateString('pt-BR', options)}`;
+}
+
+// --- Start ---
+initSystem();
