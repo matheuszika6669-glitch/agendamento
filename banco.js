@@ -23,7 +23,6 @@ async function initSystem() {
     currentWeekStart.setDate(today.getDate() + daysToMonday);
     currentWeekStart.setHours(0, 0, 0, 0);
 
-    // Define semana ativa (última semana cadastrada ou semana atual)
     let { data, error } = await supabase
         .from("bookings")
         .select("week_start")
@@ -59,45 +58,11 @@ function showAdminLogin() {
     document.getElementById('adminLogin').classList.remove('hidden');
 }
 
-async function memberLogin(event) {
-    event.preventDefault();
-    console.log("Iniciando login do sócio...");
-    
-    const name = document.getElementById('memberName').value.trim();
-    const cpfInput = document.getElementById('memberCPF');
-    const cpf = cpfInput.value.trim(); // Aqui, estamos pegando o valor do CPF
-
-    console.log("Valor do CPF:", cpf); // Verifique no console se o valor está correto
-
-    if (!validateCPF(cpfInput)) {
-        alert('CPF inválido!');
-        return;
-    }
-
-    let { data: member, error } = await supabase
-        .from("members")
-        .select("*")
-        .eq("cpf", cpf)
-        .maybeSingle();
-
-    if (error || !member) {
-        console.error("Erro ao buscar membro:", error);
-        alert('Membro não encontrado!');
-        return;
-    }
-
-    currentUser = member;
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('memberLogin').classList.add('hidden');
-    document.getElementById('memberDashboard').classList.remove('hidden');
-    updateScheduleDisplay();
-}
-
-
 // --- Login Sócio ---
 async function memberLogin(event) {
     event.preventDefault();
     console.log("Iniciando login do sócio...");
+    
     const name = document.getElementById('memberName').value.trim();
     const cpf = document.getElementById('memberCPF').value.trim();
 
@@ -121,7 +86,6 @@ async function memberLogin(event) {
     currentUser = member;
     console.log("Membro encontrado:", currentUser);
 
-    // Exibe painel sócio
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('memberLogin').classList.add('hidden');
     document.getElementById('memberDashboard').classList.remove('hidden');
@@ -151,7 +115,6 @@ async function adminLogin(event) {
     currentUser = admin;
     console.log("Administrador autenticado:", currentUser);
 
-    // Exibe painel administrador
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminLogin').classList.add('hidden');
     document.getElementById('adminDashboard').classList.remove('hidden');
@@ -175,173 +138,6 @@ async function updateScheduleDisplay() {
     const weekDisplay = formatWeekDisplay(currentWeekStart);
     document.getElementById('currentWeekDisplay').textContent = weekDisplay;
     updateDayContent();
-}
-
-async function selectDay(dayIndex) {
-    selectedDay = dayIndex;
-    document.querySelectorAll('.day-tab').forEach((tab, index) => {
-        tab.className = index === dayIndex
-            ? 'day-tab px-4 py-3 bg-green-600 text-white border-b-2 border-green-600'
-            : 'day-tab px-4 py-3 bg-gray-100 text-gray-600 hover:bg-gray-200';
-    });
-    updateDayContent();
-}
-
-async function updateDayContent() {
-    const timeSlotsContainer = document.getElementById('timeSlots');
-    timeSlotsContainer.innerHTML = '';
-    const hours = [];
-    for (let h = 8; h <= 21; h++) hours.push(`${h.toString().padStart(2, '0')}:00`);
-    const { data: bookings } = await supabase
-        .from("bookings")
-        .select("*, members(name, cpf)")
-        .eq("week_start", getWeekKey());
-    const { data: blocks } = await supabase
-        .from("blocked_slots")
-        .select("*");
-    const blocksMap = {};
-    blocks?.forEach(b => blocksMap[`${b.day_of_week}-${b.hour}`] = true);
-    hours.forEach(hour => {
-        const booking = bookings?.find(b => b.day_of_week === selectedDay && b.hour === hour);
-        const isBlocked = blocksMap[`${selectedDay}-${hour}`];
-        const slotDiv = document.createElement('div');
-        slotDiv.className = 'p-3 rounded-lg border-2 text-center min-h-[80px] flex flex-col justify-center';
-        if (isBlocked) {
-            slotDiv.className += ' bg-gray-800 text-white';
-            slotDiv.innerHTML = `<div>${hour}</div><div>🚫 Bloqueado</div>`;
-        } else if (booking) {
-            if (booking.members?.cpf === currentUser.cpf) {
-                slotDiv.className += ' bg-blue-500 text-white';
-                slotDiv.innerHTML = `<div>${hour}</div><div>Meu agendamento</div>`;
-                slotDiv.onclick = () => openCancelModal(selectedDay, hour, booking.id);
-            } else {
-                slotDiv.className += ' bg-red-500 text-white';
-                slotDiv.innerHTML = `<div>${hour}</div><div>Ocupado</div>`;
-            }
-        } else {
-            slotDiv.className += ' bg-green-500 text-white hover:bg-green-600';
-            slotDiv.innerHTML = `<div>${hour}</div><div>Disponível</div>`;
-            slotDiv.onclick = () => openBookingModal(selectedDay, hour);
-        }
-        timeSlotsContainer.appendChild(slotDiv);
-    });
-}
-
-function openBookingModal(dayIndex, hour) {
-    selectedSlot = { dayIndex, hour };
-    document.getElementById('bookingTime').textContent = hour;
-    document.getElementById('bookingModal').classList.remove('hidden');
-}
-
-function closeBookingModal() {
-    document.getElementById('bookingModal').classList.add('hidden');
-    selectedSlot = null;
-}
-
-async function confirmBooking() {
-    if (selectedSlot) {
-        await supabase.from("bookings").insert([{
-            member_id: currentUser.id,
-            week_start: getWeekKey(),
-            day_of_week: selectedSlot.dayIndex,
-            hour: selectedSlot.hour
-        }]);
-        updateScheduleDisplay();
-        closeBookingModal();
-        alert('Agendamento realizado!');
-    }
-}
-
-function openCancelModal(dayIndex, hour, bookingId) {
-    selectedSlot = { dayIndex, hour, bookingId };
-    document.getElementById('cancelTime').textContent = hour;
-    document.getElementById('cancelModal').classList.remove('hidden');
-}
-
-function closeCancelModal() {
-    document.getElementById('cancelModal').classList.add('hidden');
-    selectedSlot = null;
-}
-
-async function confirmCancel() {
-    if (selectedSlot) {
-        await supabase.from("bookings").delete().eq("id", selectedSlot.bookingId);
-        updateScheduleDisplay();
-        closeCancelModal();
-        alert('Agendamento cancelado!');
-    }
-}
-
-// --- Agenda Admin ---
-async function updateAdminScheduleDisplay() {
-    console.log("Atualizando exibição da agenda do administrador...");
-    const weekDisplay = formatWeekDisplay(currentWeekStart);
-    document.getElementById('adminCurrentWeekDisplay').textContent = weekDisplay;
-    updateAdminDayContent();
-}
-
-async function selectAdminDay(dayIndex) {
-    selectedAdminDay = dayIndex;
-    document.querySelectorAll('.admin-day-tab').forEach((tab, index) => {
-        tab.className = index === dayIndex
-            ? 'admin-day-tab px-4 py-3 bg-blue-600 text-white border-b-2 border-blue-600'
-            : 'admin-day-tab px-4 py-3 bg-gray-100 text-gray-600 hover:bg-gray-200';
-    });
-    updateAdminDayContent();
-}
-
-async function updateAdminDayContent() {
-    const container = document.getElementById('adminTimeSlots');
-    container.innerHTML = '';
-    const hours = [];
-    for (let h = 8; h <= 21; h++) hours.push(`${h.toString().padStart(2, '0')}:00`);
-    const { data: bookings } = await supabase
-        .from("bookings")
-        .select("*, members(name, cpf)")
-        .eq("week_start", getWeekKey());
-    const { data: blocks } = await supabase.from("blocked_slots").select("*");
-    const blocksMap = {};
-    blocks?.forEach(b => blocksMap[`${b.day_of_week}-${b.hour}`] = b);
-    hours.forEach(hour => {
-        const booking = bookings?.find(b => b.day_of_week === selectedAdminDay && b.hour === hour);
-        const isBlocked = blocksMap[`${selectedAdminDay}-${hour}`];
-        const div = document.createElement('div');
-        div.className = 'p-3 rounded-lg border-2 text-center min-h-[80px] flex flex-col justify-center';
-        if (isBlocked) {
-            div.className += ' bg-gray-800 text-white';
-            div.innerHTML = `<div>${hour}</div><div>🚫 Bloqueado</div>`;
-            div.onclick = () => toggleBlockSlot(selectedAdminDay, hour, isBlocked.id);
-        } else if (booking) {
-            div.className += ' bg-red-500 text-white';
-            div.innerHTML = `<div>${hour}</div><div>${booking.members?.name}</div>`;
-        } else {
-            if (isBlockMode) {
-                div.className += ' bg-orange-500 text-white';
-                div.innerHTML = `<div>${hour}</div><div>Bloquear</div>`;
-                div.onclick = () => toggleBlockSlot(selectedAdminDay, hour);
-            } else {
-                div.className += ' bg-green-500 text-white';
-                div.innerHTML = `<div>${hour}</div><div>Disponível</div>`;
-            }
-        }
-        container.appendChild(div);
-    });
-}
-
-async function toggleBlockSlot(dayIndex, hour, blockId = null) {
-    if (blockId) {
-        await supabase.from("blocked_slots").delete().eq("id", blockId);
-    } else {
-        await supabase.from("blocked_slots").insert([{ day_of_week: dayIndex, hour }]);
-    }
-    updateAdminScheduleDisplay();
-}
-
-function toggleBlockMode() {
-    isBlockMode = !isBlockMode;
-    const btn = document.getElementById('blockModeBtn');
-    btn.textContent = isBlockMode ? 'Modo Bloqueio: ON' : 'Modo Bloqueio: OFF';
-    updateAdminScheduleDisplay();
 }
 
 // --- Utilitários ---
