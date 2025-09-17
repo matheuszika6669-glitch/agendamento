@@ -59,42 +59,40 @@ function showAdminLogin() {
     document.getElementById('adminLogin').classList.remove('hidden');
 }
 
-// --- Validação CPF ---
-function formatCPF(input) {
-    let value = input.value.replace(/\D/g, '');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-    input.value = value;
-}
+async function memberLogin(event) {
+    event.preventDefault();
+    console.log("Iniciando login do sócio...");
+    
+    const name = document.getElementById('memberName').value.trim();
+    const cpfInput = document.getElementById('memberCPF');
+    const cpf = cpfInput.value.trim(); // Aqui, estamos pegando o valor do CPF
 
-function validateCPF(input) {
-    const cpf = input.value.replace(/\D/g, '');
-    const errorDiv = document.getElementById('cpfError');
-    if (cpf.length !== 11 || !isValidCPF(cpf)) {
-        input.classList.add('border-red-500');
-        errorDiv.classList.remove('hidden');
-        return false;
-    } else {
-        input.classList.remove('border-red-500');
-        errorDiv.classList.add('hidden');
-        return true;
+    console.log("Valor do CPF:", cpf); // Verifique no console se o valor está correto
+
+    if (!validateCPF(cpfInput)) {
+        alert('CPF inválido!');
+        return;
     }
+
+    let { data: member, error } = await supabase
+        .from("members")
+        .select("*")
+        .eq("cpf", cpf)
+        .maybeSingle();
+
+    if (error || !member) {
+        console.error("Erro ao buscar membro:", error);
+        alert('Membro não encontrado!');
+        return;
+    }
+
+    currentUser = member;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('memberLogin').classList.add('hidden');
+    document.getElementById('memberDashboard').classList.remove('hidden');
+    updateScheduleDisplay();
 }
 
-function isValidCPF(cpf) {
-    if (/^(\d)\1{10}$/.test(cpf)) return false;
-    let sum = 0;
-    for (let i = 0; i < 9; i++) sum += parseInt(cpf.charAt(i)) * (10 - i);
-    let remainder = (sum * 10) % 11;
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    if (remainder !== parseInt(cpf.charAt(9))) return false;
-    sum = 0;
-    for (let i = 0; i < 10; i++) sum += parseInt(cpf.charAt(i)) * (11 - i);
-    remainder = (sum * 10) % 11;
-    if (remainder === 10 || remainder === 11) remainder = 0;
-    return remainder === parseInt(cpf.charAt(10));
-}
 
 // --- Login Sócio ---
 async function memberLogin(event) {
