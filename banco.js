@@ -44,10 +44,12 @@ function showLoginScreen() {
     document.getElementById('memberDashboard').classList.add('hidden');
     document.getElementById('adminDashboard').classList.add('hidden');
 }
+
 function showMemberLogin() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('memberLogin').classList.remove('hidden');
 }
+
 function showAdminLogin() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('adminLogin').classList.remove('hidden');
@@ -61,6 +63,7 @@ function formatCPF(input) {
     value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
     input.value = value;
 }
+
 function validateCPF(input) {
     const cpf = input.value.replace(/\D/g, '');
     const errorDiv = document.getElementById('cpfError');
@@ -74,6 +77,7 @@ function validateCPF(input) {
         return true;
     }
 }
+
 function isValidCPF(cpf) {
     if (/^(\d)\1{10}$/.test(cpf)) return false;
     let sum = 0;
@@ -92,10 +96,9 @@ function isValidCPF(cpf) {
 async function memberLogin(event) {
     event.preventDefault();
     const name = document.getElementById('memberName').value.trim();
-    const cpfInput = document.getElementById('memberCPF');
-    const cpf = cpfInput.value.trim();
-    
-    if (!validateCPF(cpfInput)) {
+    const cpf = document.getElementById('memberCPF').value.trim();
+
+    if (!validateCPF(cpf)) {
         alert('CPF inválido!');
         return;
     }
@@ -106,71 +109,48 @@ async function memberLogin(event) {
         .eq("cpf", cpf)
         .maybeSingle();
 
-    if (error) {
+    if (error || !member) {
         console.error("Erro ao buscar membro:", error);
+        alert('Membro não encontrado!');
+        return;
     }
 
-    if (!member) {
-        let { data: newMember, error: insertError } = await supabase
-            .from("members")
-            .insert([{ name, cpf }])
-            .select()
-            .single();
-
-        if (insertError) {
-            console.error("Erro ao inserir novo membro:", insertError);
-            return; // Impede continuar com o fluxo em caso de erro
-        } else {
-            member = newMember;
-        }
-    }
-
-    if (member && member.name) {
-        currentUser = member;
-        isAdmin = false;
-        currentWeekStart = new Date(activeWeekStart);
-        document.getElementById('currentMemberName').textContent = member.name;
-        document.getElementById('memberLogin').classList.add('hidden');
-        document.getElementById('memberDashboard').classList.remove('hidden');
-        updateScheduleDisplay();
-    } else {
-        console.error("Membro não encontrado ou erro na resposta.");
-    }
+    currentUser = member;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('memberLogin').classList.add('hidden');
+    document.getElementById('memberDashboard').classList.remove('hidden');
+    updateScheduleDisplay();
 }
 
 // --- Login Admin ---
 async function adminLogin(event) {
     event.preventDefault();
-    const user = document.getElementById('adminUser').value;
-    const pass = document.getElementById('adminPass').value;
+    const username = document.getElementById('adminUser').value;
+    const password = document.getElementById('adminPass').value;
+
     let { data: admin, error } = await supabase
         .from("admins")
         .select("*")
-        .eq("username", user)
-        .eq("password", pass)
+        .eq("username", username)
+        .eq("password", password)
         .maybeSingle();
 
-    if (error) {
-        console.error("Erro ao autenticar administrador:", error);
-        alert('Erro ao autenticar administrador.');
+    if (error || !admin) {
+        alert('Usuário ou senha incorretos!');
+        console.error("Falha no login do administrador:", error);
         return;
     }
 
-    if (admin) {
-        currentUser = { name: 'Administrador' };
-        isAdmin = true;
-        document.getElementById('adminLogin').classList.add('hidden');
-        document.getElementById('adminDashboard').classList.remove('hidden');
-        updateAdminScheduleDisplay();
-    } else {
-        alert('Usuário ou senha incorretos!');
-        console.error("Falha no login do administrador: credenciais inválidas.");
-    }
+    currentUser = admin;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('adminLogin').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.remove('hidden');
+    updateAdminScheduleDisplay();
 }
 
+// --- Logout ---
 function logout() {
     currentUser = null;
-    isAdmin = false;
     document.getElementById('memberName').value = '';
     document.getElementById('memberCPF').value = '';
     document.getElementById('adminUser').value = '';
