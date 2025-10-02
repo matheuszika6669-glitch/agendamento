@@ -6,12 +6,13 @@
     <title>Sistema de Chamados T.I</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
     <style>
         body {
             box-sizing: border-box;
         }
         
-        /* AnimaÃ§Ãµes suaves para transiÃ§Ãµes */
+        /* Animações suaves para transições */
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
@@ -44,9 +45,9 @@
             <div class="flex items-center space-x-4">
                 <!-- Toggle modo escuro/claro -->
                 <button id="themeToggle" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    ðŸŒ™ Modo Claro
+                    🌙 Modo Claro
                 </button>
-                <!-- BotÃ£o de logout -->
+                <!-- Botão de logout -->
                 <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
                     Sair
                 </button>
@@ -64,7 +65,7 @@
             
             <form id="loginForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">UsuÃ¡rio</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário</label>
                     <input type="text" id="username" required 
                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
@@ -85,7 +86,7 @@
     <!-- Dashboard Admin -->
     <div id="adminDashboard" class="hidden">
         <div class="max-w-7xl mx-auto p-6">
-            <!-- EstatÃ­sticas -->
+            <!-- Estatísticas -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Chamados Abertos</h3>
@@ -96,20 +97,20 @@
                     <p id="closedTicketsCount" class="text-3xl font-bold text-green-600">0</p>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Total de UsuÃ¡rios</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Total de Usuários</h3>
                     <p id="usersCount" class="text-3xl font-bold text-purple-600">0</p>
                 </div>
             </div>
 
-            <!-- AÃ§Ãµes Administrativas -->
+            <!-- Ações Administrativas -->
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">AÃ§Ãµes Administrativas</h3>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Ações Administrativas</h3>
                 <div class="flex flex-wrap gap-4">
                     <button id="createUserBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        + Criar UsuÃ¡rio
+                        + Criar Usuário
                     </button>
                     <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        ðŸ“Š Gerar RelatÃ³rio PDF
+                        📊 Gerar Relatório PDF
                     </button>
                 </div>
             </div>
@@ -125,14 +126,14 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Protocolo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solicitante</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">DescriÃ§Ã£o</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data/Hora</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AÃ§Ãµes</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="adminTicketsList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <!-- Chamados serÃ£o inseridos aqui via JavaScript -->
+                            <!-- Chamados serão inseridos aqui via JavaScript -->
                         </tbody>
                     </table>
                 </div>
@@ -143,7 +144,7 @@
     <!-- Dashboard Cliente -->
     <div id="clientDashboard" class="hidden">
         <div class="max-w-4xl mx-auto p-6">
-            <!-- BotÃ£o para novo chamado -->
+            <!-- Botão para novo chamado -->
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
                 <button id="newTicketBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
@@ -157,19 +158,19 @@
                     <h3 class="text-xl font-bold text-gray-800 dark:text-white">Meus Chamados</h3>
                 </div>
                 <div id="clientTicketsList" class="p-6">
-                    <!-- Chamados do cliente serÃ£o inseridos aqui -->
+                    <!-- Chamados do cliente serão inseridos aqui -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para criar usuÃ¡rio (Admin) -->
+    <!-- Modal para criar usuário (Admin) -->
     <div id="createUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Criar Novo UsuÃ¡rio</h3>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Criar Novo Usuário</h3>
             <form id="createUserForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome de UsuÃ¡rio</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome de Usuário</label>
                     <input type="text" id="newUsername" required 
                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
@@ -179,7 +180,7 @@
                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de UsuÃ¡rio</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Usuário</label>
                     <select id="userType" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                         <option value="client">Cliente</option>
                         <option value="admin">Administrador</option>
@@ -208,7 +209,7 @@
                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">DescriÃ§Ã£o do Problema</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
                     <textarea id="ticketDescription" required rows="4"
                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
                 </div>
@@ -224,13 +225,13 @@
         </div>
     </div>
 
-    <!-- Modal para relatÃ³rio -->
+    <!-- Modal para relatório -->
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar RelatÃ³rio PDF</h3>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório PDF</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">PerÃ­odo</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Período</label>
                     <select id="reportPeriod" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                         <option value="weekly">Semanal</option>
                         <option value="monthly">Mensal</option>
@@ -248,17 +249,17 @@
         </div>
     </div>
 
-    <!-- RodapÃ© -->
+    <!-- Rodapé -->
     <footer class="bg-gray-800 text-white p-6 mt-12">
         <div class="max-w-7xl mx-auto text-center">
             <h4 class="text-lg font-semibold mb-4">Contatos para Suporte</h4>
             <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-8">
                 <div class="flex items-center space-x-2">
-                    <span>ðŸ“§</span>
+                    <span>📧</span>
                     <a href="mailto:lfragozo563@gmail.com" class="hover:text-blue-400 transition-colors">lfragozo563@gmail.com</a>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <span>ðŸ“±</span>
+                    <span>📱</span>
                     <a href="tel:+5551993525004" class="hover:text-blue-400 transition-colors">51 99352-5004</a>
                 </div>
             </div>
@@ -266,248 +267,137 @@
     </footer>
 
     <script>
-       // Supabase Initialization (substitua com suas chaves do Supabase)
-const supabaseUrl = 'https://paqzevbgutnxkslvluvb.supabase.co'; // Substitua pelo seu URL do Supabase
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhcXpldmJndXRueGtzbHZsdXZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MjY1MDQsImV4cCI6MjA3NTAwMjUwNH0.7ThjLIHp7zAsPYYp7__q1q4ygEEKHotdWJPORXWLCPQ'; // Substitua pela sua chave pública do Supabase
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Configuração do Supabase
+        const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Variável global para o usuário atual
-let currentUser = null;
+        let currentUser = null;
 
-// Elementos DOM
-const loginScreen = document.getElementById('loginScreen');
-const adminDashboard = document.getElementById('adminDashboard');
-const clientDashboard = document.getElementById('clientDashboard');
-const themeToggle = document.getElementById('themeToggle');
-const logoutBtn = document.getElementById('logoutBtn');
-
-// Sistema de autenticação
-document.getElementById('loginForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-
-    // Usando a autenticação do Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email: username,
-        password: password,
-    });
-
-    if (data) {
-        currentUser = data.user;
-        loginScreen.classList.add('hidden');
-        if (currentUser.role === 'admin') {
-            adminDashboard.classList.remove('hidden');
-            loadAdminDashboard();
-        } else {
-            clientDashboard.classList.remove('hidden');
-            loadClientDashboard();
-        }
-    } else {
-        alert('Usuário ou senha incorretos!');
-    }
-});
-
-// Logout
-logoutBtn.addEventListener('click', async function () {
-    await supabase.auth.signOut();
-    currentUser = null;
-    loginScreen.classList.remove('hidden');
-    adminDashboard.classList.add('hidden');
-    clientDashboard.classList.add('hidden');
-    document.getElementById('loginForm').reset();
-});
-
-// Toggle tema escuro/claro
-let isDarkMode = true;
-themeToggle.addEventListener('click', function () {
-    isDarkMode = !isDarkMode;
-    document.body.className = isDarkMode ? 'min-h-screen transition-all duration-300 dark-mode' : 'min-h-screen transition-all duration-300 light-mode';
-    themeToggle.textContent = isDarkMode ? '🌞 Modo Claro' : '🌙 Modo Escuro';
-});
-
-// Carregar dashboard do admin
-async function loadAdminDashboard() {
-    await updateAdminStats();
-    await loadAdminTickets();
-}
-
-// Atualizar estatísticas do admin
-async function updateAdminStats() {
-    const { data: openTickets, error: openTicketsError } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('status', 'open');
-
-    const { data: closedTickets, error: closedTicketsError } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('status', 'closed');
-
-    const { data: totalUsers, error: totalUsersError } = await supabase
+        // Função para criar admin automaticamente, se necessário
+       async function createAdminIfNeeded() {
+    const { data: existingAdmin, error } = await supabase
         .from('users')
         .select('*')
-        .eq('role', 'client');
+        .eq('username', 'admin') // Verifica se já existe o admin com o nome "admin"
+        .single();
 
-    document.getElementById('openTicketsCount').textContent = openTickets.length;
-    document.getElementById('closedTicketsCount').textContent = closedTickets.length;
-    document.getElementById('usersCount').textContent = totalUsers.length;
-}
+    if (!existingAdmin) {
+        // Criar o admin com um e-mail fictício, mas com "admin" como nome de usuário.
+        const { user, error: createError } = await supabase.auth.api.createUser({
+            email: 'admin@admin.com', // E-mail fictício
+            password: 'admin123', // Senha do admin
+            user_metadata: { 
+                role: 'admin',
+                username: 'admin' // Nome de usuário
+            },
+        });
 
-// Carregar chamados para admin
-async function loadAdminTickets() {
-    const { data: tickets, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .order('createdAt', { ascending: false });
-
-    const tbody = document.getElementById('adminTicketsList');
-    tbody.innerHTML = '';
-
-    tickets.forEach(ticket => {
-        const row = document.createElement('tr');
-        const statusBadge = ticket.status === 'open'
-            ? '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Aberto</span>'
-            : '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Encerrado</span>';
-
-        const actions = ticket.status === 'open'
-            ? `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>
-               <button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>
-               <button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`
-            : `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
-
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
-            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">${ticket.description}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${formatDateTime(ticket.createdAt)}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
-        `;
-
-        tbody.appendChild(row);
-    });
-}
-
-// Carregar dashboard do cliente
-async function loadClientDashboard() {
-    const { data: userTickets, error } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('userId', currentUser.id);
-
-    const container = document.getElementById('clientTicketsList');
-    container.innerHTML = '';
-
-    if (userTickets.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Você ainda não possui chamados abertos.</p>';
-        return;
-    }
-
-    userTickets.forEach(ticket => {
-        const statusColor = ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800';
-        const statusText = ticket.status === 'open' ? 'Aberto' : 'Encerrado';
-
-        const ticketCard = document.createElement('div');
-        ticketCard.className = 'border border-gray-200 dark:border-gray-600 rounded-lg p-4 mb-4';
-        ticketCard.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h4 class="font-semibold text-gray-800 dark:text-white">Protocolo: ${ticket.protocol}</h4>
-                <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${statusText}</span>
-            </div>
-            <p class="text-gray-600 dark:text-gray-300 mb-2"><strong>Solicitante:</strong> ${ticket.requester}</p>
-            <p class="text-gray-600 dark:text-gray-300 mb-2"><strong>Descrição:</strong> ${ticket.description}</p>
-            <p class="text-gray-500 dark:text-gray-400 text-sm"><strong>Aberto em:</strong> ${formatDateTime(ticket.createdAt)}</p>
-            ${ticket.closedAt ? `<p class="text-gray-500 dark:text-gray-400 text-sm"><strong>Encerrado em:</strong> ${formatDateTime(ticket.closedAt)}</p>` : ''}
-        `;
-        container.appendChild(ticketCard);
-    });
-}
-
-// Ações dos chamados (Admin)
-async function startTicket(ticketId) {
-    const { data, error } = await supabase
-        .from('tickets')
-        .update({ status: 'in_progress' })
-        .eq('id', ticketId);
-
-    alert(`Chamado iniciado!`);
-    loadAdminDashboard();
-}
-
-async function closeTicket(ticketId) {
-    const { data, error } = await supabase
-        .from('tickets')
-        .update({ status: 'closed', closedAt: new Date() })
-        .eq('id', ticketId);
-
-    alert(`Chamado encerrado!`);
-    loadAdminDashboard();
-}
-
-async function deleteTicket(ticketId) {
-    if (confirm('Tem certeza que deseja excluir este chamado?')) {
-        const { data, error } = await supabase
-            .from('tickets')
-            .delete()
-            .eq('id', ticketId);
-
-        alert('Chamado excluído com sucesso!');
-        loadAdminDashboard();
-    }
-}
-
-// Modal para criar novo chamado (Cliente)
-document.getElementById('newTicketBtn').addEventListener('click', function () {
-    document.getElementById('newTicketModal').classList.remove('hidden');
-});
-
-document.getElementById('cancelNewTicket').addEventListener('click', function () {
-    document.getElementById('newTicketModal').classList.add('hidden');
-    document.getElementById('newTicketForm').reset();
-});
-
-document.getElementById('newTicketForm').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const requesterName = document.getElementById('requesterName').value;
-    const description = document.getElementById('ticketDescription').value;
-
-    const protocol = `TI-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
-
-    const { data, error } = await supabase
-        .from('tickets')
-        .insert([
-            {
-                protocol: protocol,
-                requester: requesterName,
-                description: description,
-                status: 'open',
-                userId: currentUser.id,
-                createdAt: new Date(),
-            }
-        ]);
-
-    if (data) {
-        alert(`Chamado criado com sucesso! Protocolo: ${protocol}`);
+        if (createError) {
+            console.error('Erro ao criar o admin:', createError);
+        } else {
+            console.log('Admin criado com sucesso!');
+        }
     } else {
-        alert('Erro ao criar chamado!');
+        console.log('Admin já existe.');
     }
-
-    document.getElementById('newTicketModal').classList.add('hidden');
-    document.getElementById('newTicketForm').reset();
-    loadClientDashboard();
-});
-
-// Função auxiliar para formatar data/hora
-function formatDateTime(date) {
-    return new Date(date).toLocaleString('pt-BR');
 }
 
-// Inicialização
-document.addEventListener('DOMContentLoaded', function () {
-    loginScreen.classList.remove('hidden');
-});
+// Chama a função para criar o admin caso não exista
+createAdminIfNeeded();
 
+
+        // Funções de login e autenticação
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Login com Supabase
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: username, 
+                password: password,
+            });
+
+            if (error) {
+                alert('Usuário ou senha incorretos!');
+            } else {
+                currentUser = data.user;
+                loginScreen.classList.add('hidden');
+                
+                if (currentUser.user_metadata.role === 'admin') {
+                    adminDashboard.classList.remove('hidden');
+                    loadAdminDashboard();
+                } else {
+                    clientDashboard.classList.remove('hidden');
+                    loadClientDashboard();
+                }
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            currentUser = null;
+            loginScreen.classList.remove('hidden');
+            adminDashboard.classList.add('hidden');
+            clientDashboard.classList.add('hidden');
+            document.getElementById('loginForm').reset();
+        });
+
+        // Funções para gerenciar chamados
+        async function loadAdminTickets() {
+            const { data: tickets, error } = await supabase
+                .from('tickets')
+                .select('*');
+
+            if (error) {
+                alert('Erro ao carregar chamados!');
+                return;
+            }
+
+            const tbody = document.getElementById('adminTicketsList');
+            tbody.innerHTML = '';
+            
+            tickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
+                
+                const statusBadge = ticket.status === 'open' 
+                    ? '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Aberto</span>'
+                    : '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Encerrado</span>';
+                
+                const actions = ticket.status === 'open'
+                    ? `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>
+                       <button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>
+                       <button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>` 
+                    : `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">${ticket.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.createdAt).toLocaleString('pt-BR')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        async function closeTicket(ticketId) {
+            const { error } = await supabase
+                .from('tickets')
+                .update({ status: 'closed', closed_at: new Date().toISOString() })
+                .match({ id: ticketId });
+
+            if (error) {
+                alert('Erro ao fechar chamado!');
+            } else {
+                alert('Chamado encerrado com sucesso!');
+                loadAdminDashboard();
+            }
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98784acd1602f905',t:'MTc1OTI4MzI0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
