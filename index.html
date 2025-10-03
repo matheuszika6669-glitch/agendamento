@@ -121,7 +121,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Protocolo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solicitante</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Anexo</th> <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data/Hora</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
                             </tr>
@@ -201,6 +201,13 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
                     <textarea id="ticketDescription" rows="4" required 
                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anexar Arquivo (Opcional - Máx. 5MB)</label>
+                    <input type="file" id="ticketAttachment" 
+                           class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150"
+                           accept=".jpg, .jpeg, .png, .pdf, .doc, .docx">
                 </div>
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
@@ -417,11 +424,17 @@
             actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
+            
+            // Lógica para exibir o link de anexo
+            const attachmentLink = ticket.attachment_url 
+                ? `<a href="${ticket.attachment_url}" target="_blank" class="text-blue-500 hover:text-blue-700 transition-colors">🔗 Ver Anexo</a>`
+                : 'N/A';
 
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">${attachmentLink}</td>
                 <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
@@ -457,6 +470,10 @@
         // Lógica de exibição simples para o cliente
         tickets.forEach(ticket => {
              const statusColor = ticket.status === 'closed' ? 'bg-green-100 text-green-800' : (ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800');
+             
+             const attachmentHtml = ticket.attachment_url 
+                ? `<a href="${ticket.attachment_url}" target="_blank" class="text-sm text-blue-500 hover:underline">Ver Anexo</a>`
+                : '';
 
              listDiv.innerHTML += `
                 <div class="p-4 mb-4 border rounded-lg shadow dark:bg-gray-700 dark:border-gray-600">
@@ -465,7 +482,10 @@
                         <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
                     </div>
                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
-                    <p class="text-xs text-gray-400">Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                    <div class="flex justify-between items-center text-xs text-gray-400">
+                        <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                        ${attachmentHtml} 
+                    </div>
                 </div>
             `;
         });
@@ -506,6 +526,9 @@
     async function deleteTicket(ticketId) {
         if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
         
+        // 🛑 Lógica para deletar o arquivo anexo no Storage (opcional, mas recomendado para limpeza)
+        // Se a sua tabela 'tickets' tiver a URL do anexo, você pode tentar deletar o arquivo antes de deletar o registro.
+        
         const { error } = await supabaseClient
             .from('tickets')
             .delete()
@@ -537,8 +560,6 @@
         const newPassword = document.getElementById('newPassword').value;
 
         // 1. Criar o Usuário no Supabase AUTH
-        // Observação: Por padrão, usuários criados via signUp com a chave anon não exigem e-mail de confirmação.
-        // Se você ativou o "Confirm Email" nas configurações do Auth, este novo usuário estará sem "confirmed_at".
         const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             email: newEmail,
             password: newPassword,
@@ -572,7 +593,7 @@
         loadAdminDashboard(); // Atualiza a contagem de usuários
     });
 
-    // FUNÇÃO ABRIR NOVO CHAMADO 
+    // FUNÇÃO ABRIR NOVO CHAMADO (ATUALIZADA PARA UPLOAD)
     document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -583,24 +604,60 @@
 
         const requesterName = document.getElementById('requesterName').value;
         const description = document.getElementById('ticketDescription').value;
-
-        // Gera um protocolo simples
+        const attachmentInput = document.getElementById('ticketAttachment');
+        const file = attachmentInput.files[0];
+        
+        let attachmentUrl = null;
         const protocol = 'TICKET-' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-        // Insere na tabela 'tickets'
-        const { data, error } = await supabaseClient
+        // 1. UPLOAD DO ARQUIVO PARA O SUPABASE STORAGE (SE HOUVER ARQUIVO)
+        if (file) {
+            // Gera um caminho único: client_user_id/protocolo-timestamp.ext
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
+            const bucketName = 'ticket_attachments'; // 🛑 Confirme se este é o nome do seu bucket!
+            
+            try {
+                const { error: uploadError } = await supabaseClient.storage
+                    .from(bucketName)
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false 
+                    });
+                    
+                if (uploadError) {
+                    throw uploadError;
+                }
+                
+                // 2. Obtém a URL pública do arquivo
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from(bucketName)
+                    .getPublicUrl(filePath);
+                
+                attachmentUrl = publicUrlData.publicUrl;
+                
+            } catch (uploadError) {
+                alert(`Erro ao fazer upload do arquivo: ${uploadError.message}. Verifique o Supabase Storage e as políticas de RLS.`);
+                console.error('Erro de Upload:', uploadError);
+                return; 
+            }
+        }
+
+        // 3. INSERÇÃO DO NOVO CHAMADO NO BANCO DE DADOS
+        const { data, error: insertError } = await supabaseClient
             .from('tickets')
             .insert({
-                user_id: currentUser.id, // Vínculo com o usuário logado
+                user_id: currentUser.id, 
                 requester: requesterName,
                 description: description,
                 protocol: protocol,
-                status: 'open' 
+                status: 'open',
+                attachment_url: attachmentUrl // SALVA A URL DO ANEXO
             });
 
-        if (error) {
-            alert(`Erro ao abrir chamado: ${error.message}`);
-            console.error('Erro de Inserção:', error);
+        if (insertError) {
+            alert(`Erro ao abrir chamado no DB: ${insertError.message}`);
+            console.error('Erro de Inserção:', insertError);
             return;
         }
 
@@ -636,6 +693,10 @@
         // 2. Cria o conteúdo HTML (com tags e estilos em linha para o PDF)
         const statusColor = ticket.status === 'closed' ? '#10B981' : (ticket.status === 'open' ? '#F59E0B' : '#3B82F6');
         const statusText = ticket.status.toUpperCase().replace('_', ' ');
+        
+        const attachmentSection = ticket.attachment_url ? 
+            `<p style="margin-bottom: 10px;"><strong>Anexo:</strong> <a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6; text-decoration: none;">Link para Anexo</a></p>` :
+            `<p style="margin-bottom: 10px;"><strong>Anexo:</strong> Nenhum</p>`;
 
         const content = `
             <div style="padding: 30px; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; border: 1px solid #e5e7eb;">
@@ -656,84 +717,89 @@
                         <td style="padding: 5px 0;">${ticket.requester}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 5px 0;"><strong>ID Cliente (UUID):</strong></td>
-                        <td style="padding: 5px 0; font-size: 10px;">${ticket.user_id}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px 0;"><strong>Aberto em:</strong></td>
+                        <td style="padding: 5px 0;"><strong>Data de Abertura:</strong></td>
                         <td style="padding: 5px 0;">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
                     </tr>
-                    ${ticket.closed_at ? `
                     <tr>
-                        <td style="padding: 5px 0;"><strong>Fechado em:</strong></td>
-                        <td style="padding: 5px 0;">${new Date(ticket.closed_at).toLocaleString('pt-BR')}</td>
-                    </tr>` : ''}
+                        <td style="padding: 5px 0;"><strong>Anexo:</strong></td>
+                        <td style="padding: 5px 0;">
+                            ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Nenhum'}
+                        </td>
+                    </tr>
                 </table>
 
-                <h2 style="margin-top: 20px; font-size: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; color: #3b82f6;">Detalhes do Problema</h2>
-                <p style="white-space: pre-wrap; margin-top: 10px; padding: 10px; background-color: #f9fafb; border-radius: 5px; border: 1px solid #e5e7eb;">${ticket.description}</p>
+                <h2 style="color: #1f2937; font-size: 18px; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">
+                    Detalhes da Solicitação
+                </h2>
+                <p style="white-space: pre-wrap; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    ${ticket.description}
+                </p>
+
+                <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
+                    <p>Documento gerado automaticamente pelo Sistema de Chamados T.I em ${new Date().toLocaleString('pt-BR')}</p>
+                </div>
             </div>
         `;
 
-        // 3. Geração do PDF
-        if (typeof html2pdf !== 'undefined') {
-            html2pdf().from(content).set({
-                margin: 10,
-                filename: `chamado_${ticket.protocol}.pdf`,
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).save();
-        } else {
-            console.error('ERRO: html2pdf.js não está carregado.');
-            alert('Erro: Biblioteca de PDF não carregada.');
-        }
+
+        // 3. Configuração e Geração do PDF
+        const options = {
+            margin: 10,
+            filename: `Chamado-${ticket.protocol}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().from(content).set(options).save();
     }
     
-    // TORNA A FUNÇÃO DE GERAÇÃO DE PDF GLOBAL
     window.generateTicketPDF = generateTicketPDF;
 
 
     // ------------------------------------------------------------------
-    // 4. LÓGICA DE MODAIS E TEMA
+    // 4. FUNÇÕES GERAIS E INICIALIZAÇÃO
     // ------------------------------------------------------------------
 
-    // Abertura e fechamento de modais
-    document.getElementById('newTicketBtn').addEventListener('click', () => {
-        document.getElementById('newTicketModal').classList.remove('hidden');
-    });
-    document.getElementById('cancelNewTicket').addEventListener('click', () => {
-        document.getElementById('newTicketModal').classList.add('hidden');
-        document.getElementById('newTicketForm').reset();
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', checkSession);
+
+    // Toggle de Tema
+    document.getElementById('themeToggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        document.body.classList.toggle('light-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        this.innerHTML = isDarkMode ? '🌙 Modo Claro' : '☀️ Modo Escuro';
     });
     
+    // Funções de Modal
     document.getElementById('createUserBtn').addEventListener('click', () => {
         document.getElementById('createUserModal').classList.remove('hidden');
     });
     document.getElementById('cancelCreateUser').addEventListener('click', () => {
         document.getElementById('createUserModal').classList.add('hidden');
-        document.getElementById('createUserForm').reset();
     });
-
+    
+    document.getElementById('newTicketBtn').addEventListener('click', () => {
+        document.getElementById('newTicketModal').classList.remove('hidden');
+    });
+    document.getElementById('cancelNewTicket').addEventListener('click', () => {
+        document.getElementById('newTicketModal').classList.add('hidden');
+    });
+    
     document.getElementById('generateReportBtn').addEventListener('click', () => {
         document.getElementById('reportModal').classList.remove('hidden');
     });
     document.getElementById('cancelReport').addEventListener('click', () => {
         document.getElementById('reportModal').classList.add('hidden');
     });
-
-
-    // Lógica do Theme Toggle
-    const themeToggle = document.getElementById('themeToggle');
-    let isDarkMode = true;
-
-    themeToggle.addEventListener('click', () => {
-        isDarkMode = !isDarkMode;
-        document.body.classList.toggle('dark-mode', isDarkMode);
-        document.body.classList.toggle('light-mode', !isDarkMode);
-        themeToggle.innerHTML = isDarkMode ? '🌙 Modo Claro' : '☀️ Modo Escuro';
-    });
     
-    // Inicialização: Verifica se já está logado
-    checkSession();
+    // Simulação da Geração de Relatório de Múltiplos Tickets (sem implementação real de filtro por data)
+    document.getElementById('generatePDF').addEventListener('click', async () => {
+        alert('A função de relatório completo está em desenvolvimento. Por enquanto, gere PDFs individuais na tabela.');
+        document.getElementById('reportModal').classList.add('hidden');
+    });
+
 </script>
+</body>
 </html>
