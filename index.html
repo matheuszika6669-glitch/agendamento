@@ -46,13 +46,13 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário (Email)</label>
                     <input type="text" id="username" required 
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
                     <input type="password" id="password" required 
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
@@ -143,19 +143,19 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome de Usuário</label>
                     <input type="text" id="newUsername" required 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                     <input type="email" id="newEmail" required 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="ex: cliente@dominio.com">
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="ex: cliente@dominio.com">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
                     <input type="password" id="newPassword" required 
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div class="flex space-x-4">
@@ -177,19 +177,19 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Seu Nome/Departamento</label>
                     <input type="text" id="requesterName" required 
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: João - Financeiro">
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: João - Financeiro">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
                     <textarea id="ticketDescription" rows="4" required 
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
+                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anexar Arquivo (Opcional - Máx. 5MB)</label>
                     <input type="file" id="ticketAttachment" 
-                           class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150"
-                           accept=".jpg, .jpeg, .png, .pdf, .doc, .docx">
+                               class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150"
+                               accept=".jpg, .jpeg, .png, .pdf, .doc, .docx">
                 </div>
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
@@ -255,6 +255,7 @@
     const reportModal = document.getElementById('reportModal');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
+    const themeToggle = document.getElementById('themeToggle');
 
     // Função auxiliar para mostrar o dashboard correto
     function showDashboard(role) {
@@ -273,7 +274,7 @@
         }
         document.body.scrollTop = document.documentElement.scrollTop = 0;
     }
-
+    
     // ------------------------------------------------------------------
     // 1. FUNÇÕES DE LOGIN E AUTENTICAÇÃO
     // ------------------------------------------------------------------
@@ -404,7 +405,7 @@
                 actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
             
-            // Botão PDF Individual
+            // Botão PDF Individual (mantido para compatibilidade)
             actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
@@ -419,7 +420,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">${attachmentLink}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(ticket.status)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
             `;
@@ -456,22 +457,22 @@
              const statusColor = ticket.status === 'closed' ? 'bg-green-100 text-green-800' : (ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800');
              
              const attachmentHtml = ticket.attachment_url 
-                ? `<a href="${ticket.attachment_url}" target="_blank" class="text-sm text-blue-500 hover:underline">Ver Anexo</a>`
-                : '';
+                 ? `<a href="${ticket.attachment_url}" target="_blank" class="text-sm text-blue-500 hover:underline">Ver Anexo</a>`
+                 : '';
 
              listDiv.innerHTML += `
-                <div class="p-4 mb-4 border rounded-lg shadow dark:bg-gray-700 dark:border-gray-600">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-gray-900 dark:text-white">Protocolo: ${ticket.protocol}</h4>
-                        <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
-                    </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
-                    <div class="flex justify-between items-center text-xs text-gray-400">
-                        <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                        ${attachmentHtml} 
-                    </div>
-                </div>
-            `;
+                 <div class="p-4 mb-4 border rounded-lg shadow dark:bg-gray-700 dark:border-gray-600">
+                     <div class="flex justify-between items-center mb-2">
+                         <h4 class="font-bold text-gray-900 dark:text-white">Protocolo: ${ticket.protocol}</h4>
+                         <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
+                     </div>
+                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
+                     <div class="flex justify-between items-center text-xs text-gray-400">
+                         <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                         ${attachmentHtml} 
+                     </div>
+                 </div>
+             `;
         });
     }
 
@@ -634,102 +635,113 @@
                 requester: requesterName,
                 description: description,
                 attachment_url: attachmentUrl, // Insere a URL ou NULL
-                user_id: currentUser.id
+                user_id: currentUser.id,
+                status: 'open'
             });
 
         if (insertError) {
-            alert(`Erro ao enviar chamado! ${insertError.message}`);
-            console.error('Erro de Insert:', insertError);
-        } else {
-            alert(`Chamado ${protocol} aberto com sucesso!`);
-            document.getElementById('newTicketModal').classList.add('hidden');
-            document.getElementById('newTicketForm').reset();
-            loadClientDashboard(); // Atualiza a lista do cliente
+            alert(`Erro ao abrir chamado: ${insertError.message}`);
+            // Se falhar a inserção, você deve tentar deletar o arquivo do storage
+            return;
         }
+
+        alert(`Chamado aberto com sucesso! Protocolo: ${protocol}`);
+
+        document.getElementById('newTicketModal').classList.add('hidden');
+        document.getElementById('newTicketForm').reset();
+        loadClientDashboard(); // Atualiza a lista de chamados do cliente
     });
 
+    // Funções de controle dos modais
+    document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
+    document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
+    document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
+    document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
+    
+    // Funções de controle do modal de relatório
+    generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
+    cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
+    confirmGeneratePDF.addEventListener('click', gerarRelatorioPDFLote);
+
+
     // ------------------------------------------------------------------
-    // 4. FUNÇÕES DE PDF (INDIVIDUAL E EM LOTE)
+    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E MELHORADAS)
     // ------------------------------------------------------------------
 
-    // 4.1. PDF INDIVIDUAL
-    window.generateTicketPDF = async function(ticketId) {
+    // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de lote)
+    async function buscarTicketsUltimos30Dias() {
+        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data: tickets, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .gte('created_at', trintaDiasAtras) // Filtra por data
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            alert('Erro ao buscar tickets para o relatório: ' + error.message);
+            return null;
+        }
+        return tickets;
+    }
+    
+    // Geração de PDF Individual (Mantida por compatibilidade)
+    async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
             .select('*')
             .eq('id', ticketId)
             .single();
 
-        if (error) {
-            alert('Erro ao buscar dados do chamado para PDF!');
-            console.error(error);
+        if (error || !ticket) {
+            alert('Erro ao buscar detalhes do chamado.');
             return;
         }
+        
+        const statusText = ticket.status.toUpperCase().replace('_', ' ');
+        const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
 
         const content = document.createElement('div');
         content.style.padding = '20px';
         content.style.fontFamily = 'Arial, sans-serif';
         content.innerHTML = `
-            <h1 style="color: #3b82f6; text-align: center;">RELATÓRIO DE CHAMADO T.I</h1>
-            <hr style="border: 1px solid #e5e7eb; margin: 10px 0;">
-            <p><strong>Protocolo:</strong> ${ticket.protocol}</p>
+            <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;">Protocolo: ${ticket.protocol}</p>
+            </div>
             <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-            <p><strong>Status:</strong> ${ticket.status.toUpperCase().replace('_', ' ')}</p>
-            <p><strong>Aberto em:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-            ${ticket.closed_at ? `<p><strong>Encerrado em:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
-            <hr style="border: 1px solid #e5e7eb; margin: 10px 0;">
-            <h3>Descrição do Problema</h3>
-            <p>${ticket.description.replace(/\n/g, '<br>')}</p>
-            ${ticket.attachment_url ? `
-                <h3>Anexo</h3>
-                <p><a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Clique para visualizar o anexo.</a></p>
-            ` : ''}
+            <p><strong>Aberto em:</strong> ${dateCreated}</p>
+            <p><strong>Status:</strong> ${statusText}</p>
+            <p><strong>Descrição:</strong></p>
+            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9;">
+                ${ticket.description.replace(/\n/g, '<br>')}
+            </div>
+            <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
+            <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px dashed #ccc;">
+                <p>Assinatura do Responsável T.I:</p>
+                <div style="width: 200px; height: 1px; border-top: 1px solid #000; margin: 10px auto;"></div>
+            </div>
         `;
 
         const options = {
             margin: 10,
-            filename: `Chamado-${ticket.protocol}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
+            filename: `${ticket.protocol}.pdf`,
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
         html2pdf().from(content).set(options).save();
     }
+    window.generateTicketPDF = generateTicketPDF;
 
-    // 4.2. LÓGICA DE BUSCA E GERAÇÃO DE PDF EM LOTE (30 DIAS)
-    
-    // Função de BUSCA (Onde estava o erro de lógica)
-    async function buscarTicketsUltimos30Dias() {
-        const trintaDiasAtras = new Date();
-        trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-        const dataLimiteISO = trintaDiasAtras.toISOString();
 
-        console.log(`Buscando tickets a partir de: ${dataLimiteISO}`);
-
-        const { data: tickets, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .gte('created_at', dataLimiteISO) // FILTRO CORRETO
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Erro na consulta do relatório:', error);
-            alert(`Erro ao buscar dados: ${error.message}`);
-            return null;
-        }
-        
-        return tickets;
-    }
-
-    // Função de GERAÇÃO EM LOTE
+    // FUNÇÃO DE GERAÇÃO EM LOTE - CORRIGIDA COM MELHOR CSS, CNPJ E ASSINATURAS
     async function gerarRelatorioPDFLote() {
         reportModal.classList.add('hidden');
         
         const tickets = await buscarTicketsUltimos30Dias();
 
         if (!tickets) {
-            // A função de busca já alertou o erro, apenas paramos aqui
             return;
         }
 
@@ -738,33 +750,75 @@
             return;
         }
         
-        // 1. Cria o conteúdo HTML do relatório consolidado
+        // 1. Cria o conteúdo HTML do relatório consolidado com o novo CSS e CNPJ
         const content = document.createElement('div');
         content.style.padding = '20px';
         content.style.fontFamily = 'Arial, sans-serif';
+        content.style.color = '#1f2937'; // Texto escuro para melhor contraste
+        
         content.innerHTML = `
-            <h1 style="color: #3b82f6; text-align: center; margin-bottom: 5px;">RELATÓRIO CONSOLIDADO DE CHAMADOS</h1>
-            <h2 style="text-align: center; font-size: 1.2em; margin-top: 5px;">Últimos 30 Dias (Total: ${tickets.length} Chamados)</h2>
-            <p style="text-align: right; font-size: 0.8em;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
-            <hr style="border: 2px solid #3b82f6; margin: 10px 0;">
+            <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO CONSOLIDADO DE CHAMADOS</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563;">CNPJ: 54.677.769/0001-78</p>
+            </div>
+
+            <h2 style="text-align: center; font-size: 1.2em; margin-top: 5px; color: #4b5563;">
+                Últimos 30 Dias (Total: ${tickets.length} Chamados)
+            </h2>
+            <p style="text-align: right; font-size: 0.8em; color: #6b7280;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
         `;
         
-        // 2. Itera sobre os tickets e adiciona ao conteúdo
+        // 2. Itera sobre os tickets e adiciona ao conteúdo com CSS melhorado
         tickets.forEach((ticket, index) => {
+            const statusColor = ticket.status === 'closed' ? '#10b981' : (ticket.status === 'open' ? '#f59e0b' : '#3b82f6');
+            const statusText = ticket.status.toUpperCase().replace('_', ' ');
+            const ticketDescription = ticket.description ? ticket.description.substring(0, 150) + (ticket.description.length > 150 ? '...' : '') : 'N/A';
+            const requesterName = ticket.requester || 'N/A';
+            const createdAtDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : 'N/A';
+
             const ticketHtml = `
-                <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 5px; background-color: #f9f9f9;">
-                    <p style="font-weight: bold; color: #1f2937;">${index + 1}. Protocolo: ${ticket.protocol}</p>
-                    <p style="margin-left: 10px; font-size: 0.9em;">Solicitante: ${ticket.requester}</p>
-                    <p style="margin-left: 10px; font-size: 0.9em;">Status: ${ticket.status.toUpperCase().replace('_', ' ')}</p>
-                    <p style="margin-left: 10px; font-size: 0.9em;">Aberto em: ${new Date(ticket.created_at).toLocaleDateString('pt-BR')}</p>
-                    <p style="margin-left: 10px; font-size: 0.9em;">Descrição: ${ticket.description.substring(0, 100)}...</p>
-                    ${ticket.attachment_url ? `<p style="margin-left: 10px; font-size: 0.9em;">Anexo: Sim</p>` : ''}
+                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <p style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
+                        ${index + 1}. Protocolo: ${ticket.protocol} 
+                        <span style="float: right; font-weight: normal; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${statusText}</span>
+                    </p>
+                    <div style="font-size: 0.9em; line-height: 1.5;">
+                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
+                        <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
+                        <p style="margin: 2px 0;"><strong>Descrição:</strong> ${ticketDescription}</p>
+                        <p style="margin: 2px 0; color: ${ticket.attachment_url ? '#3b82f6' : '#6b7280'};"><strong>Anexo:</strong> ${ticket.attachment_url ? 'Sim (Verificado)' : 'Não'}</p>
+                    </div>
                 </div>
             `;
             content.innerHTML += ticketHtml;
         });
 
-        // 3. Gera e salva o PDF
+        // 3. Adiciona a seção de rodapé e assinatura
+        content.innerHTML += `
+            <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
+                <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
+                    Este relatório consolida a atividade de chamados de T.I. no período.
+                </p>
+                
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
+                        </td>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
+                        </td>
+                    </tr>
+                </table>
+                <div style="text-align: center; margin-top: 30px; font-size: 0.75em; color: #9ca3af;">
+                    <p>Documento gerado eletronicamente.</p>
+                </div>
+            </div>
+        `;
+
+        // 4. Gera e salva o PDF
         const options = {
             margin: 10,
             filename: `Relatorio_30Dias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
@@ -776,38 +830,30 @@
         html2pdf().from(content).set(options).save();
         alert('Relatório consolidado gerado com sucesso!');
     }
-
-
-    // ------------------------------------------------------------------
-    // 5. LISTENERS PARA MODAIS
-    // ------------------------------------------------------------------
-
-    // Ações do Admin
-    document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
-    document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
-
-    // Ações do Cliente
-    document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
-    document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
-
-    // Ações do Relatório
-    generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
-    document.getElementById('cancelReport').addEventListener('click', () => reportModal.classList.add('hidden'));
     
-    // Confirmação do relatório em lote
-    confirmGeneratePDF.addEventListener('click', gerarRelatorioPDFLote);
+    // TORNA A FUNÇÃO DE GERAÇÃO EM LOTE GLOBA L
+    window.gerarRelatorioPDFLote = gerarRelatorioPDFLote;
 
 
-    // Toggle de Tema
-    document.getElementById('themeToggle').addEventListener('click', () => {
-        document.body.classList.toggle('dark-mode');
-        document.body.classList.toggle('light-mode');
+    // ------------------------------------------------------------------
+    // 5. FUNÇÃO DE ALTERNAR TEMA
+    // ------------------------------------------------------------------
+    themeToggle.addEventListener('click', () => {
         const isDarkMode = document.body.classList.contains('dark-mode');
-        document.getElementById('themeToggle').innerHTML = isDarkMode ? '🌙 Modo Claro' : '☀️ Modo Escuro';
+        if (isDarkMode) {
+            document.body.classList.remove('dark-mode');
+            document.body.classList.add('light-mode');
+            themeToggle.textContent = '☀️ Modo Escuro';
+        } else {
+            document.body.classList.remove('light-mode');
+            document.body.classList.add('dark-mode');
+            themeToggle.textContent = '🌙 Modo Claro';
+        }
     });
-    
-    // Inicialização
+
+    // Inicia a verificação de sessão ao carregar a página
     checkSession();
 </script>
+
 </body>
 </html>
