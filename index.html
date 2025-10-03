@@ -388,24 +388,31 @@
             row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
             const statusBadge = getStatusBadge(ticket.status);
             
-            let actions = '';
-            if (ticket.status === 'open') {
-                actions += `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
-            }
-            if (ticket.status === 'open' || ticket.status === 'in_progress') {
-                actions += `<button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
-            }
-            actions += `<button onclick="generateTicketPDF(${ticket.id})" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
-            actions += `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
-            
-            row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
-                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
-            `;
+           let actions = '';
+// Os IDs precisam de aspas simples ('${ticket.id}') no onclick, pois são strings (UUIDs)
+
+if (ticket.status === 'open') {
+    actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
+}
+
+if (ticket.status === 'open' || ticket.status === 'in_progress') {
+    actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
+}
+
+// CORRIGIDO: Este é o botão PDF, agora com aspas simples
+actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
+
+actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
+
+row.innerHTML = `
+    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
+    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
+    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
+    <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
+`;
+// ...
             
             tbody.appendChild(row);
         });
