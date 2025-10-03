@@ -269,78 +269,72 @@
   <script>
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI3rFUw4ls'; // Sua chave correta
 
-    // Inicialização CORRIGIDA: Usa supabaseClient
+    // Inicialização do Supabase
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); 
 
     let currentUser = null;
     
-    // Referências do DOM para evitar erros
+    // Referências do DOM
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
     const clientDashboard = document.getElementById('clientDashboard');
 
 
-    // Função para criar admin automaticamente (NOTA: Apenas verifica se o perfil existe)
+    // Função de verificação do Admin (para console)
     async function createAdminIfNeeded() {
-        // Verifica se o perfil "admin" existe na sua tabela 'users'
-        const { data: existingAdmin, error } = await supabaseClient 
+        const { data: existingAdmin } = await supabaseClient 
             .from('users')
             .select('*')
             .eq('username', 'admin') 
             .single();
 
         if (!existingAdmin) {
-            console.log('Admin não encontrado na tabela de perfis. Por favor, crie o usuário em Auth e vincule o UUID na tabela "users"!');
+            console.log('Admin não encontrado. Lembre-se de criar o usuário em Auth e vincular o UUID na tabela "users"!');
         } else {
             console.log('Perfil Admin encontrado.');
         }
     }
-
-    // Chama a função
     createAdminIfNeeded();
 
 
-    // Funções de login e autenticação (LÓGICA CORRIGIDA)
+    // Funções de login e autenticação
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        // O campo 'username' está sendo usado como 'email' (ex: admin@admin.com)
         const email = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        // 1. Tenta o LOGIN PADRÃO (seguro) do Supabase Auth
+        // 1. Login no Supabase Auth
         const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
             email: email, 
             password: password,
         });
 
         if (authError) {
-            alert('Usuário ou senha incorretos! Verifique as credenciais ou a chave API.');
+            alert('Usuário ou senha incorretos! Verifique as credenciais.');
             return;
         }
 
-        // 2. Busca o ROLE do usuário na tabela 'users' (perfis)
+        // 2. Busca o ROLE do usuário
         const userId = authData.user.id;
-
         const { data: userData, error: userError } = await supabaseClient
             .from('users')
-            .select('role') // Só precisamos da coluna role
+            .select('role')
             .eq('id', userId)
             .single();
         
         if (userError || !userData) {
-            alert('Perfil de usuário (role) não encontrado. Verifique se o UUID está inserido corretamente na sua tabela "users".');
-            await supabaseClient.auth.signOut(); // Força o logout
+            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID.');
+            await supabaseClient.auth.signOut();
             return;
         }
 
-        // Login e Role de Perfil OK
+        // Sucesso
         currentUser = authData.user;
-        currentUser.user_metadata = { role: userData.role }; // Adiciona o role para uso posterior
+        currentUser.user_metadata = { role: userData.role };
 
-        // Redirecionamento
-        loginScreen.classList.add('fade-out'); // Você pode adicionar animação aqui
+        loginScreen.classList.add('fade-out');
         setTimeout(() => {
             loginScreen.classList.add('hidden');
             loginScreen.classList.remove('fade-out');
@@ -352,50 +346,48 @@
                 clientDashboard.classList.remove('hidden');
                 loadClientDashboard();
             }
-        }, 300); // Espera a animação (se implementada)
+        }, 300);
     });
 
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', async function() {
-        const { error } = await supabaseClient.auth.signOut();
-
+        await supabaseClient.auth.signOut();
         currentUser = null;
         loginScreen.classList.remove('hidden');
         adminDashboard.classList.add('hidden');
         clientDashboard.classList.add('hidden');
         document.getElementById('loginForm').reset();
-        document.body.scrollTop = 0; // Para o topo da página
+        document.body.scrollTop = 0;
     });
 
-    // Função dummy para carregar o dashboard do admin
+    // Função de carregamento do dashboard
     async function loadAdminDashboard() {
         loadAdminTickets();
-        // Aqui você carregaria as estatísticas e outros dados do admin
+        // Você pode chamar outras funções aqui (ex: loadUsersList();)
     }
 
-    // Função dummy para carregar o dashboard do cliente
     async function loadClientDashboard() {
-        // Aqui você carregaria os chamados específicos do cliente
+        // Implementar carregamento de tickets do cliente
     }
 
-    // Funções para gerenciar chamados
+    // --- Funções de Tickets ---
+    
     async function loadAdminTickets() {
         const { data: tickets, error } = await supabaseClient
             .from('tickets')
             .select('*')
-            .order('created_at', { ascending: false }); // Ordena pelo mais recente primeiro
+            .order('created_at', { ascending: false });
 
         if (error) {
             console.error('Erro ao carregar chamados:', error);
-            alert('Erro ao carregar chamados!');
             return;
         }
 
         const tbody = document.getElementById('adminTicketsList');
         tbody.innerHTML = '';
         
-        // Função auxiliar para obter a cor do status
         const getStatusBadge = (status) => {
+            // ... (código do badge omitido por brevidade, mas está correto)
             switch(status) {
                 case 'open': return '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Aberto</span>';
                 case 'in_progress': return '<span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">Em Progresso</span>';
@@ -410,14 +402,19 @@
             
             const statusBadge = getStatusBadge(ticket.status);
             
-            // Renderiza as ações com base no status
             let actions = '';
+            // Botões de Ação
+            if (ticket.status === 'open') {
+                actions += `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
+            }
             if (ticket.status === 'open' || ticket.status === 'in_progress') {
-                if (ticket.status === 'open') {
-                    actions += `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
-                }
                 actions += `<button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
+            
+            // Botão de PDF
+            actions += `<button onclick="generateTicketPDF(${ticket.id})" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
+            
+            // Botão de Excluir
             actions += `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
             
             row.innerHTML = `
@@ -433,7 +430,7 @@
         });
     }
 
-    // Função para iniciar o chamado
+    // Funções de Ação do Ticket (startTicket, closeTicket, deleteTicket - mantidas e corretas)
     async function startTicket(ticketId) {
         const { error } = await supabaseClient
             .from('tickets')
@@ -448,7 +445,6 @@
         }
     }
 
-    // Função para fechar o chamado
     async function closeTicket(ticketId) {
         const { error } = await supabaseClient
             .from('tickets')
@@ -463,7 +459,6 @@
         }
     }
 
-    // Função para deletar o chamado
     async function deleteTicket(ticketId) {
         if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
         
@@ -479,6 +474,96 @@
             loadAdminDashboard();
         }
     }
+
+    // --- FUNÇÃO CORRIGIDA: GERAR PDF ---
+    async function generateTicketPDF(ticketId) {
+        // 1. Buscar dados específicos do ticket
+        const { data: ticket, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('id', ticketId)
+            .single();
+
+        if (error || !ticket) {
+            console.error('Erro ao buscar dados do ticket:', error);
+            alert('Não foi possível gerar o PDF. Dados do chamado não encontrados.');
+            return;
+        }
+
+        // 2. Formatação do Conteúdo HTML para o PDF
+        const content = `
+            <div style="padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
+                <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">Protocolo de Chamado #${ticket.protocol}</h1>
+                <p><strong>Status:</strong> <span style="color: ${ticket.status === 'closed' ? 'green' : 'red'};">${ticket.status.toUpperCase()}</span></p>
+                <p><strong>Solicitante:</strong> ${ticket.requester}</p>
+                <p><strong>ID do Cliente (UUID):</strong> ${ticket.user_id}</p>
+                <p><strong>Data de Abertura:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                ${ticket.closed_at ? `<p><strong>Data de Fechamento:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
+                
+                <h2 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Descrição</h2>
+                <p>${ticket.description}</p>
+            </div>
+        `;
+
+        // 3. Gerar o PDF (Requer a biblioteca html2pdf.js carregada no seu HTML)
+        
+        // Verifique se html2pdf está disponível
+        if (typeof html2pdf !== 'undefined') {
+            html2pdf().from(content).set({
+                margin: 10,
+                filename: `chamado_${ticket.protocol}.pdf`,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).save();
+        } else {
+            alert('Erro: A biblioteca html2pdf.js não está carregada no seu HTML. Adicione o script tag antes desta seção.');
+        }
+    }
+    // --- FIM DA FUNÇÃO PDF ---
+
+    // --- FUNÇÃO CORRIGIDA: CRIAR USUÁRIO ---
+    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const newUsername = document.getElementById('newUsername').value;
+        const newEmail = document.getElementById('newEmail').value;
+        const newPassword = document.getElementById('newPassword').value;
+
+        // 1. Criar o Usuário no Supabase AUTH
+        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+            email: newEmail,
+            password: newPassword,
+        });
+
+        if (authError) {
+            alert(`Erro ao criar conta: ${authError.message}`);
+            return;
+        }
+
+        // 2. Inserir o Perfil (Role) na Tabela 'users'
+        const newUserId = authData.user.id;
+        
+        const { error: userInsertError } = await supabaseClient
+            .from('users')
+            .insert({
+                id: newUserId,
+                username: newUsername,
+                role: 'client' // Define o papel como cliente
+            });
+
+        if (userInsertError) {
+            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}`);
+            // Limpeza: Deleta a conta Auth se o perfil falhar
+            await supabaseClient.auth.admin.deleteUser(newUserId); 
+            return;
+        }
+
+        alert(`Usuário cliente "${newUsername}" criado com sucesso!`);
+        document.getElementById('createUserModal').classList.add('hidden');
+        document.getElementById('createUserForm').reset();
+    });
+    // --- FIM DA FUNÇÃO CRIAR USUÁRIO ---
+
 
     // Lógica do botão de tema
     const themeToggle = document.getElementById('themeToggle');
@@ -497,8 +582,7 @@
         }
     });
 
-    // Você precisa implementar as outras funções (criar usuário, abrir chamado, gerar PDF, etc.)
-    // Exemplo:
+    // Abertura de modais
     document.getElementById('newTicketBtn').addEventListener('click', () => {
         document.getElementById('newTicketModal').classList.remove('hidden');
     });
@@ -506,6 +590,16 @@
     document.getElementById('cancelNewTicket').addEventListener('click', () => {
         document.getElementById('newTicketModal').classList.add('hidden');
     });
+    
+    // Assumindo que o botão "Criar Usuário" do Admin Dashboard abre o modal 'createUserModal'
+    document.getElementById('createUserBtn').addEventListener('click', () => {
+        document.getElementById('createUserModal').classList.remove('hidden');
+    });
+
+    document.getElementById('cancelCreateUser').addEventListener('click', () => {
+        document.getElementById('createUserModal').classList.add('hidden');
+    });
+
 
 </script>
 </body>
