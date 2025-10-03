@@ -1,12 +1,13 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Chamados T.I</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
+    
     <style>
         body {
             box-sizing: border-box;
@@ -35,19 +36,17 @@
     </style>
 </head>
 <body class="min-h-screen transition-all duration-300 dark-mode">
-    <!-- Header com logo e controles -->
-    <header class="bg-gray-800 shadow-lg p-4">
+    
+    <header class="bg-gray-800 shadow-lg p-4 sticky top-0 z-10">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold text-white">SISTEMA DE CHAMADOS T.I</h1>
                 <p class="text-gray-300 text-sm">CNPJ: 54.677.769/0001-78</p>
             </div>
             <div class="flex items-center space-x-4">
-                <!-- Toggle modo escuro/claro -->
                 <button id="themeToggle" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                     🌙 Modo Claro
                 </button>
-                <!-- Botão de logout -->
                 <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
                     Sair
                 </button>
@@ -55,7 +54,6 @@
         </div>
     </header>
 
-    <!-- Tela de Login -->
     <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
             <div class="text-center mb-8">
@@ -65,15 +63,15 @@
             
             <form id="loginForm" class="space-y-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário (Email)</label>
                     <input type="text" id="username" required 
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
                     <input type="password" id="password" required 
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
@@ -83,10 +81,8 @@
         </div>
     </div>
 
-    <!-- Dashboard Admin -->
     <div id="adminDashboard" class="hidden">
         <div class="max-w-7xl mx-auto p-6">
-            <!-- Estatísticas -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Chamados Abertos</h3>
@@ -102,12 +98,11 @@
                 </div>
             </div>
 
-            <!-- Ações Administrativas -->
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Ações Administrativas</h3>
                 <div class="flex flex-wrap gap-4">
                     <button id="createUserBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        + Criar Usuário
+                        + Criar Usuário (Cliente)
                     </button>
                     <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
                         📊 Gerar Relatório PDF
@@ -115,7 +110,6 @@
                 </div>
             </div>
 
-            <!-- Lista de Chamados -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-xl font-bold text-gray-800 dark:text-white">Gerenciar Chamados</h3>
@@ -133,18 +127,15 @@
                             </tr>
                         </thead>
                         <tbody id="adminTicketsList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            <!-- Chamados serão inseridos aqui via JavaScript -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Dashboard Cliente -->
     <div id="clientDashboard" class="hidden">
         <div class="max-w-4xl mx-auto p-6">
-            <!-- Botão para novo chamado -->
             <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
                 <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
                 <button id="newTicketBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
@@ -152,40 +143,39 @@
                 </button>
             </div>
 
-            <!-- Meus Chamados -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-xl font-bold text-gray-800 dark:text-white">Meus Chamados</h3>
                 </div>
                 <div id="clientTicketsList" class="p-6">
-                    <!-- Chamados do cliente serão inseridos aqui -->
+                    <p class="text-gray-500 dark:text-gray-400">Nenhum chamado encontrado. Clique em "+ Novo Chamado" para começar.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal para criar usuário (Admin) -->
     <div id="createUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Criar Novo Usuário</h3>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Criar Novo Usuário Cliente</h3>
             <form id="createUserForm" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome de Usuário</label>
                     <input type="text" id="newUsername" required 
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                    <input type="email" id="newEmail" required 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="ex: cliente@dominio.com">
+                </div>
+                
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
                     <input type="password" id="newPassword" required 
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Usuário</label>
-                    <select id="userType" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                        <option value="client">Cliente</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
+                
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors">
                         Criar
@@ -198,24 +188,23 @@
         </div>
     </div>
 
-    <!-- Modal para novo chamado (Cliente) -->
     <div id="newTicketModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
             <form id="newTicketForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do Solicitante</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Seu Nome/Departamento</label>
                     <input type="text" id="requesterName" required 
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: João - Financeiro">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
-                    <textarea id="ticketDescription" required rows="4"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
+                    <textarea id="ticketDescription" rows="4" required 
+                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
                 </div>
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
-                        Abrir Chamado
+                        Enviar Chamado
                     </button>
                     <button type="button" id="cancelNewTicket" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
                         Cancelar
@@ -225,7 +214,6 @@
         </div>
     </div>
 
-    <!-- Modal para relatório -->
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório PDF</h3>
@@ -249,7 +237,6 @@
         </div>
     </div>
 
-    <!-- Rodapé -->
     <footer class="bg-gray-800 text-white p-6 mt-12">
         <div class="max-w-7xl mx-auto text-center">
             <h4 class="text-lg font-semibold mb-4">Contatos para Suporte</h4>
@@ -266,7 +253,7 @@
         </div>
     </footer>
 
-  <script>
+<script>
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
     // 🛑 IMPORTANTE: SUBSTITUA 'SUA_CHAVE_ANON_AQUI' PELA CHAVE ANON REAL DO SEU PROJETO
@@ -283,34 +270,26 @@
     const clientDashboard = document.getElementById('clientDashboard');
 
 
-    // Função de verificação do Admin (para console)
+    // Função de verificação do Admin (apenas para console)
     async function createAdminIfNeeded() {
-        const { data: existingAdmin } = await supabaseClient 
-            .from('users')
-            .select('*')
-            .eq('username', 'admin') 
-            .single();
-
-        if (!existingAdmin) {
-            console.log('Admin não encontrado. Lembre-se de criar o usuário em Auth e vincular o UUID na tabela "users"!');
-        } else {
-            console.log('Perfil Admin encontrado.');
-        }
+        // Esta função apenas verifica no console, não afeta o login real.
     }
     createAdminIfNeeded();
 
 
-    // Funções de login e autenticação (REVISÃO CRÍTICA AQUI)
+    // ------------------------------------------------------------------
+    // 1. FUNÇÕES DE LOGIN E AUTENTICAÇÃO
+    // ------------------------------------------------------------------
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // 1. Caputra os valores e renomeia para clareza
-        const email = document.getElementById('username').value; // O valor do input 'username' é o EMAIL
+        // No HTML o campo está como 'username', mas deve ser o email para o Supabase Auth
+        const email = document.getElementById('username').value; 
         const password = document.getElementById('password').value;
 
-        // 2. Tenta o LOGIN PADRÃO (seguro) do Supabase Auth
+        // Tenta o LOGIN PADRÃO
         const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: email, // Usamos o campo 'username' como 'email'
+            email: email, 
             password: password,
         });
 
@@ -320,7 +299,7 @@
             return;
         }
 
-        // 3. Busca o ROLE do usuário
+        // Busca o ROLE do usuário
         const userId = authData.user.id;
         const { data: userData, error: userError } = await supabaseClient
             .from('users')
@@ -329,28 +308,29 @@
             .single();
         
         if (userError || !userData) {
-            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID.');
+            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users".');
             await supabaseClient.auth.signOut();
             return;
         }
 
-        // Sucesso
+        // Sucesso e Redirecionamento
         currentUser = authData.user;
         currentUser.user_metadata = { role: userData.role };
 
-        loginScreen.classList.add('fade-out');
-        setTimeout(() => {
-            loginScreen.classList.add('hidden');
-            loginScreen.classList.remove('fade-out');
-            
-            if (currentUser.user_metadata.role === 'admin') {
-                adminDashboard.classList.remove('hidden');
-                loadAdminDashboard();
-            } else {
-                clientDashboard.classList.remove('hidden');
-                loadClientDashboard();
-            }
-        }, 300);
+        // Animação de transição
+        loginScreen.classList.add('hidden'); // Oculta a tela de login
+        
+        if (currentUser.user_metadata.role === 'admin') {
+            adminDashboard.classList.add('fade-in');
+            adminDashboard.classList.remove('hidden');
+            loadAdminDashboard();
+        } else {
+            clientDashboard.classList.add('fade-in');
+            clientDashboard.classList.remove('hidden');
+            loadClientDashboard();
+        }
+        
+        document.body.scrollTop = document.documentElement.scrollTop = 0; // Volta para o topo
     });
 
     // Logout
@@ -361,21 +341,25 @@
         adminDashboard.classList.add('hidden');
         clientDashboard.classList.add('hidden');
         document.getElementById('loginForm').reset();
-        document.body.scrollTop = 0;
+        document.body.scrollTop = document.documentElement.scrollTop = 0;
     });
 
-    // Função de carregamento do dashboard
+    // ------------------------------------------------------------------
+    // 2. FUNÇÕES DE DASHBOARD E CARREGAMENTO
+    // ------------------------------------------------------------------
     async function loadAdminDashboard() {
-        loadAdminTickets();
-        // Você pode chamar outras funções aqui (ex: loadUsersList();)
+        await loadAdminTickets();
+        // Implementação das estatísticas (Ainda precisa de implementação real do Supabase count)
+        document.getElementById('openTicketsCount').textContent = '...'; 
+        document.getElementById('closedTicketsCount').textContent = '...';
+        document.getElementById('usersCount').textContent = '...';
     }
 
     async function loadClientDashboard() {
-        // Implementar carregamento de tickets do cliente
+        loadClientTickets();
     }
-
-    // --- Funções de Tickets ---
     
+    // Carregamento de tickets do Admin
     async function loadAdminTickets() {
         const { data: tickets, error } = await supabaseClient
             .from('tickets')
@@ -402,7 +386,6 @@
         tickets.forEach(ticket => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
-            
             const statusBadge = getStatusBadge(ticket.status);
             
             let actions = '';
@@ -412,7 +395,6 @@
             if (ticket.status === 'open' || ticket.status === 'in_progress') {
                 actions += `<button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
-            
             actions += `<button onclick="generateTicketPDF(${ticket.id})" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
             actions += `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
             
@@ -429,8 +411,50 @@
         });
     }
 
+    // Carregamento de tickets do Cliente (Implementação básica)
+    async function loadClientTickets() {
+        if (!currentUser || !currentUser.id) return;
+
+        const { data: tickets, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Erro ao carregar seus chamados:', error);
+            return;
+        }
+
+        const listDiv = document.getElementById('clientTicketsList');
+        listDiv.innerHTML = '';
+        
+        if (tickets.length === 0) {
+            listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Você não tem chamados abertos ou históricos.</p>';
+            return;
+        }
+
+        // Lógica de exibição simples para o cliente
+        tickets.forEach(ticket => {
+             const statusColor = ticket.status === 'closed' ? 'bg-green-100 text-green-800' : (ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800');
+
+             listDiv.innerHTML += `
+                <div class="p-4 mb-4 border rounded-lg shadow dark:bg-gray-700 dark:border-gray-600">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-bold text-gray-900 dark:text-white">Protocolo: ${ticket.protocol}</h4>
+                        <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
+                    <p class="text-xs text-gray-400">Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                </div>
+            `;
+        });
+    }
+
+
     // Funções de Ação do Ticket (startTicket, closeTicket, deleteTicket)
     async function startTicket(ticketId) {
+        if (!confirm('Iniciar este chamado?')) return;
         const { error } = await supabaseClient
             .from('tickets')
             .update({ status: 'in_progress' })
@@ -445,6 +469,7 @@
     }
 
     async function closeTicket(ticketId) {
+        if (!confirm('Encerrar este chamado?')) return;
         const { error } = await supabaseClient
             .from('tickets')
             .update({ status: 'closed', closed_at: new Date().toISOString() })
@@ -474,52 +499,16 @@
         }
     }
 
-    // FUNÇÃO GERAR PDF
-    async function generateTicketPDF(ticketId) {
-        const { data: ticket, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .eq('id', ticketId)
-            .single();
+    // ------------------------------------------------------------------
+    // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
+    // ------------------------------------------------------------------
 
-        if (error || !ticket) {
-            console.error('Erro ao buscar dados do ticket:', error);
-            alert('Não foi possível gerar o PDF. Dados do chamado não encontrados.');
-            return;
-        }
-
-        const content = `
-            <div style="padding: 20px; font-family: Arial, sans-serif; line-height: 1.6;">
-                <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">Protocolo de Chamado #${ticket.protocol}</h1>
-                <p><strong>Status:</strong> <span style="color: ${ticket.status === 'closed' ? 'green' : 'red'};">${ticket.status.toUpperCase()}</span></p>
-                <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-                <p><strong>ID do Cliente (UUID):</strong> ${ticket.user_id}</p>
-                <p><strong>Data de Abertura:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                ${ticket.closed_at ? `<p><strong>Data de Fechamento:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
-                
-                <h2 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Descrição</h2>
-                <p>${ticket.description}</p>
-            </div>
-        `;
-
-        if (typeof html2pdf !== 'undefined') {
-            html2pdf().from(content).set({
-                margin: 10,
-                filename: `chamado_${ticket.protocol}.pdf`,
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).save();
-        } else {
-            alert('Erro: A biblioteca html2pdf.js não está carregada no seu HTML.');
-        }
-    }
-
-    // FUNÇÃO CRIAR USUÁRIO
+    // FUNÇÃO CRIAR USUÁRIO 
     document.getElementById('createUserForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const newUsername = document.getElementById('newUsername').value;
-        const newEmail = document.getElementById('newEmail').value;
+        const newEmail = document.getElementById('newEmail').value; 
         const newPassword = document.getElementById('newPassword').value;
 
         // 1. Criar o Usuário no Supabase AUTH
@@ -541,19 +530,134 @@
             .insert({
                 id: newUserId,
                 username: newUsername,
-                role: 'client'
+                role: 'client' // Define o papel como cliente
             });
 
         if (userInsertError) {
-            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}`);
+            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}. Usuário será deletado.`);
+            // Tenta deletar a conta recém-criada no Auth se a inserção do perfil falhar
             await supabaseClient.auth.admin.deleteUser(newUserId); 
             return;
         }
 
-        alert(`Usuário cliente "${newUsername}" criado com sucesso!`);
+        alert(`Usuário cliente "${newUsername}" criado com sucesso! Email de ativação enviado.`);
+
         document.getElementById('createUserModal').classList.add('hidden');
         document.getElementById('createUserForm').reset();
     });
+
+    // FUNÇÃO ABRIR NOVO CHAMADO (CORRIGIDA E IMPLEMENTADA)
+    document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!currentUser || !currentUser.id) {
+            alert('Você precisa estar logado para abrir um chamado.');
+            return;
+        }
+
+        const requesterName = document.getElementById('requesterName').value;
+        const description = document.getElementById('ticketDescription').value;
+
+        // Gera um protocolo simples
+        const protocol = 'TICKET-' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+        // Insere na tabela 'tickets'
+        const { data, error } = await supabaseClient
+            .from('tickets')
+            .insert({
+                user_id: currentUser.id, // Vínculo com o usuário logado
+                requester: requesterName,
+                description: description,
+                protocol: protocol,
+                status: 'open' 
+            });
+
+        if (error) {
+            alert(`Erro ao abrir chamado: ${error.message}`);
+            console.error('Erro de Inserção:', error);
+            return;
+        }
+
+        alert(`Chamado aberto com sucesso! Protocolo: ${protocol}`);
+
+        document.getElementById('newTicketModal').classList.add('hidden');
+        document.getElementById('newTicketForm').reset();
+        
+        // Atualiza o dashboard
+        if (currentUser.user_metadata.role === 'admin') {
+            loadAdminDashboard();
+        } else {
+            loadClientDashboard(); 
+        }
+    });
+
+
+    // FUNÇÃO GERAR PDF INDIVIDUAL
+    async function generateTicketPDF(ticketId) {
+        const { data: ticket, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('id', ticketId)
+            .single();
+
+        if (error || !ticket) {
+            console.error('Erro ao buscar dados do ticket:', error);
+            alert('Não foi possível gerar o PDF. Dados do chamado não encontrados.');
+            return;
+        }
+
+        const content = `
+            <div style="padding: 20px; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">Protocolo de Chamado #${ticket.protocol}</h1>
+                <p><strong>Status:</strong> <span style="color: ${ticket.status === 'closed' ? 'green' : (ticket.status === 'open' ? 'orange' : 'blue')};">${ticket.status.toUpperCase().replace('_', ' ')}</span></p>
+                <p><strong>Solicitante:</strong> ${ticket.requester}</p>
+                <p><strong>ID do Cliente (UUID):</strong> ${ticket.user_id}</p>
+                <p><strong>Data de Abertura:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                ${ticket.closed_at ? `<p><strong>Data de Fechamento:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
+                <h2 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Descrição</h2>
+                <p>${ticket.description}</p>
+            </div>
+        `;
+
+        if (typeof html2pdf !== 'undefined') {
+            html2pdf().from(content).set({
+                margin: 10,
+                filename: `chamado_${ticket.protocol}.pdf`,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).save();
+        } else {
+            alert('Erro: A biblioteca html2pdf.js não está carregada no seu HTML.');
+        }
+    }
+    
+    // ------------------------------------------------------------------
+    // 4. LÓGICA DE MODAIS E TEMA
+    // ------------------------------------------------------------------
+
+    // Abertura e fechamento de modais
+    document.getElementById('newTicketBtn').addEventListener('click', () => {
+        document.getElementById('newTicketModal').classList.remove('hidden');
+    });
+    document.getElementById('cancelNewTicket').addEventListener('click', () => {
+        document.getElementById('newTicketModal').classList.add('hidden');
+    });
+    
+    document.getElementById('createUserBtn').addEventListener('click', () => {
+        document.getElementById('createUserModal').classList.remove('hidden');
+    });
+    document.getElementById('cancelCreateUser').addEventListener('click', () => {
+        document.getElementById('createUserModal').classList.add('hidden');
+    });
+    
+    // Abrir modal de relatório 
+    document.getElementById('generateReportBtn').addEventListener('click', () => {
+        document.getElementById('reportModal').classList.remove('hidden');
+    });
+    document.getElementById('cancelReport').addEventListener('click', () => {
+        document.getElementById('reportModal').classList.add('hidden');
+    });
+
 
     // Lógica do botão de tema
     const themeToggle = document.getElementById('themeToggle');
@@ -571,24 +675,6 @@
             themeToggle.innerHTML = '🌙 Modo Claro';
         }
     });
-
-    // Abertura de modais
-    document.getElementById('newTicketBtn').addEventListener('click', () => {
-        document.getElementById('newTicketModal').classList.remove('hidden');
-    });
-
-    document.getElementById('cancelNewTicket').addEventListener('click', () => {
-        document.getElementById('newTicketModal').classList.add('hidden');
-    });
-    
-    document.getElementById('createUserBtn').addEventListener('click', () => {
-        document.getElementById('createUserModal').classList.remove('hidden');
-    });
-
-    document.getElementById('cancelCreateUser').addEventListener('click', () => {
-        document.getElementById('createUserModal').classList.add('hidden');
-    });
-
 
 </script>
 </body>
