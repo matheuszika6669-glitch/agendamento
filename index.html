@@ -6,8 +6,7 @@
     <title>Sistema de Chamados T.I</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
-    <style>
+        <style>
         body {
             box-sizing: border-box;
         }
@@ -266,16 +265,17 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
+
     <script>
-        // Configuração do Supabase
-        const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+       // Configuração do Supabase
+const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let currentUser = null;
+// Agora você pode usar a variável `supabase` sem problemas
 
-        // Função para criar admin automaticamente, se necessário
-       async function createAdminIfNeeded() {
+async function createAdminIfNeeded() {
     const { data: existingAdmin, error } = await supabase
         .from('users')
         .select('*')
@@ -305,6 +305,7 @@
 
 // Chama a função para criar o admin caso não exista
 createAdminIfNeeded();
+
 
 
         // Funções de login e autenticação
