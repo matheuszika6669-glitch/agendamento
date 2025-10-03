@@ -594,42 +594,74 @@
 
     // FUNÇÃO GERAR PDF INDIVIDUAL
     async function generateTicketPDF(ticketId) {
-        const { data: ticket, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .eq('id', ticketId)
-            .single();
+    // 1. Busca os dados do ticket
+    const { data: ticket, error } = await supabaseClient
+        .from('tickets')
+        .select('*')
+        .eq('id', ticketId)
+        .single();
 
-        if (error || !ticket) {
-            console.error('Erro ao buscar dados do ticket:', error);
-            alert('Não foi possível gerar o PDF. Dados do chamado não encontrados.');
-            return;
-        }
-
-        const content = `
-            <div style="padding: 20px; font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">Protocolo de Chamado #${ticket.protocol}</h1>
-                <p><strong>Status:</strong> <span style="color: ${ticket.status === 'closed' ? 'green' : (ticket.status === 'open' ? 'orange' : 'blue')};">${ticket.status.toUpperCase().replace('_', ' ')}</span></p>
-                <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-                <p><strong>ID do Cliente (UUID):</strong> ${ticket.user_id}</p>
-                <p><strong>Data de Abertura:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                ${ticket.closed_at ? `<p><strong>Data de Fechamento:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
-                <h2 style="margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Descrição</h2>
-                <p>${ticket.description}</p>
-            </div>
-        `;
-
-        if (typeof html2pdf !== 'undefined') {
-            html2pdf().from(content).set({
-                margin: 10,
-                filename: `chamado_${ticket.protocol}.pdf`,
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).save();
-        } else {
-            alert('Erro: A biblioteca html2pdf.js não está carregada no seu HTML.');
-        }
+    if (error || !ticket) {
+        console.error('Erro ao buscar dados do ticket:', error);
+        alert('Não foi possível gerar o PDF. Dados do chamado não encontrados. Verifique as políticas de RLS de SELECT.');
+        return;
     }
+
+    // 2. Cria o conteúdo HTML (com tags e estilos em linha para o PDF)
+    const statusColor = ticket.status === 'closed' ? '#10B981' : (ticket.status === 'open' ? '#F59E0B' : '#3B82F6');
+    const statusText = ticket.status.toUpperCase().replace('_', ' ');
+
+    const content = `
+        <div style="padding: 30px; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; border: 1px solid #e5e7eb;">
+            
+            <h1 style="color: #1f2937; font-size: 24px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
+                Relatório de Chamado: #${ticket.protocol}
+            </h1>
+            
+            <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 5px 0;"><strong>Status:</strong></td>
+                    <td style="padding: 5px 0;">
+                        <span style="font-weight: bold; color: ${statusColor};">${statusText}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;"><strong>Solicitante:</strong></td>
+                    <td style="padding: 5px 0;">${ticket.requester}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;"><strong>ID Cliente (UUID):</strong></td>
+                    <td style="padding: 5px 0; font-size: 10px;">${ticket.user_id}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0;"><strong>Aberto em:</strong></td>
+                    <td style="padding: 5px 0;">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
+                </tr>
+                ${ticket.closed_at ? `
+                <tr>
+                    <td style="padding: 5px 0;"><strong>Fechado em:</strong></td>
+                    <td style="padding: 5px 0;">${new Date(ticket.closed_at).toLocaleString('pt-BR')}</td>
+                </tr>` : ''}
+            </table>
+
+            <h2 style="margin-top: 20px; font-size: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; color: #3b82f6;">Detalhes do Problema</h2>
+            <p style="white-space: pre-wrap; margin-top: 10px; padding: 10px; background-color: #f9fafb; border-radius: 5px;">${ticket.description}</p>
+        </div>
+    `;
+
+    // 3. Geração do PDF
+    if (typeof html2pdf !== 'undefined') {
+        html2pdf().from(content).set({
+            margin: 10,
+            filename: `chamado_${ticket.protocol}.pdf`,
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).save();
+    } else {
+        console.error('ERRO: html2pdf.js não está carregado. Verifique o CDN no HTML.');
+        alert('Erro: Biblioteca de PDF não carregada.');
+    }
+}
     
     // ------------------------------------------------------------------
     // 4. LÓGICA DE MODAIS E TEMA
