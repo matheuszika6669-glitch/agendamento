@@ -9,30 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
     
     <style>
-        body {
-            box-sizing: border-box;
-        }
-        
-        /* Animações suaves para transições */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Estilo para modo escuro */
-        .dark-mode {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #e2e8f0;
-        }
-        
-        .light-mode {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #1a202c;
-        }
+        body { box-sizing: border-box; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .dark-mode { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e2e8f0; }
+        .light-mode { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #1a202c; }
     </style>
 </head>
 <body class="min-h-screen transition-all duration-300 dark-mode">
@@ -105,7 +86,7 @@
                         + Criar Usuário (Cliente)
                     </button>
                     <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        📊 Gerar Relatório PDF
+                        📊 Gerar Relatório 30 Dias
                     </button>
                 </div>
             </div>
@@ -121,7 +102,8 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Protocolo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solicitante</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Anexo</th> <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Anexo</th> 
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data/Hora</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
                             </tr>
@@ -220,29 +202,22 @@
             </form>
         </div>
     </div>
-
+    
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório PDF</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Período</label>
-                    <select id="reportPeriod" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                        <option value="weekly">Semanal</option>
-                        <option value="monthly">Mensal</option>
-                    </select>
-                </div>
-                <div class="flex space-x-4">
-                    <button id="generatePDF" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors">
-                        Gerar PDF
-                    </button>
-                    <button id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
-                        Cancelar
-                    </button>
-                </div>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">Será gerado um relatório consolidado com todos os chamados dos últimos 30 dias.</p>
+            <div class="flex space-x-4">
+                <button id="confirmGeneratePDF" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors">
+                    Confirmar e Gerar PDF
+                </button>
+                <button id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
+                    Cancelar
+                </button>
             </div>
         </div>
     </div>
+
 
     <footer class="bg-gray-800 text-white p-6 mt-12">
         <div class="max-w-7xl mx-auto text-center">
@@ -275,6 +250,11 @@
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
     const clientDashboard = document.getElementById('clientDashboard');
+    const createUserModal = document.getElementById('createUserModal');
+    const newTicketModal = document.getElementById('newTicketModal');
+    const reportModal = document.getElementById('reportModal');
+    const generateReportBtn = document.getElementById('generateReportBtn');
+    const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
 
     // Função auxiliar para mostrar o dashboard correto
     function showDashboard(role) {
@@ -335,7 +315,7 @@
     async function fetchUserRole(userId) {
         const { data: userData, error: userError } = await supabaseClient
             .from('users')
-            .select('role')
+            .select('role, username')
             .eq('id', userId)
             .single();
         
@@ -345,8 +325,9 @@
             return;
         }
 
-        currentUser = (await supabaseClient.auth.getSession()).data.session.user; // Obtém o objeto user completo com o token
-        currentUser.user_metadata = { role: userData.role };
+        const session = (await supabaseClient.auth.getSession()).data.session;
+        currentUser = session.user; // Obtém o objeto user completo
+        currentUser.user_metadata = { role: userData.role, username: userData.username };
         showDashboard(userData.role);
     }
     
@@ -357,7 +338,6 @@
             currentUser = session.user;
             await fetchUserRole(currentUser.id);
         } else {
-            // Garante que a tela de login esteja visível se não houver sessão
             loginScreen.classList.remove('hidden');
         }
     }
@@ -367,7 +347,6 @@
     // ------------------------------------------------------------------
     async function loadAdminDashboard() {
         await loadAdminTickets();
-        // Implementação real das estatísticas (exemplo: usar .count())
         const { count: openCount } = await supabaseClient.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'open');
         const { count: closedCount } = await supabaseClient.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'closed');
         const { count: usersCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'client');
@@ -379,6 +358,10 @@
 
     async function loadClientDashboard() {
         loadClientTickets();
+        // Preenche o campo de solicitante automaticamente
+        if (currentUser && currentUser.user_metadata.username) {
+             document.getElementById('requesterName').value = currentUser.user_metadata.username;
+        }
     }
     
     // Carregamento de tickets do Admin
@@ -420,7 +403,8 @@
             if (ticket.status === 'open' || ticket.status === 'in_progress') {
                 actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
-
+            
+            // Botão PDF Individual
             actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
@@ -498,7 +482,7 @@
         const { error } = await supabaseClient
             .from('tickets')
             .update({ status: 'in_progress' })
-            .match({ id: ticketId });
+            .eq('id', ticketId);
 
         if (error) {
             alert('Erro ao iniciar chamado!');
@@ -513,7 +497,7 @@
         const { error } = await supabaseClient
             .from('tickets')
             .update({ status: 'closed', closed_at: new Date().toISOString() })
-            .match({ id: ticketId });
+            .eq('id', ticketId);
 
         if (error) {
             alert('Erro ao fechar chamado!');
@@ -526,13 +510,12 @@
     async function deleteTicket(ticketId) {
         if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
         
-        // 🛑 Lógica para deletar o arquivo anexo no Storage (opcional, mas recomendado para limpeza)
-        // Se a sua tabela 'tickets' tiver a URL do anexo, você pode tentar deletar o arquivo antes de deletar o registro.
+        // 🛑 Lógica para deletar o arquivo anexo no Storage (deixada para futura implementação)
         
         const { error } = await supabaseClient
             .from('tickets')
             .delete()
-            .match({ id: ticketId });
+            .eq('id', ticketId);
 
         if (error) {
             alert('Erro ao excluir chamado!');
@@ -615,7 +598,7 @@
             // Gera um caminho único: client_user_id/protocolo-timestamp.ext
             const fileExt = file.name.split('.').pop();
             const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
-            const bucketName = 'ticket_attachments'; // 🛑 Confirme se este é o nome do seu bucket!
+            const bucketName = 'ticket_attachments'; 
             
             try {
                 const { error: uploadError } = await supabaseClient.storage
@@ -644,105 +627,65 @@
         }
 
         // 3. INSERÇÃO DO NOVO CHAMADO NO BANCO DE DADOS
-        const { data, error: insertError } = await supabaseClient
+        const { error: insertError } = await supabaseClient
             .from('tickets')
             .insert({
-                user_id: currentUser.id, 
+                protocol: protocol,
                 requester: requesterName,
                 description: description,
-                protocol: protocol,
-                status: 'open',
-                attachment_url: attachmentUrl // SALVA A URL DO ANEXO
+                attachment_url: attachmentUrl, // Insere a URL ou NULL
+                user_id: currentUser.id
             });
 
         if (insertError) {
-            alert(`Erro ao abrir chamado no DB: ${insertError.message}`);
-            console.error('Erro de Inserção:', insertError);
-            return;
-        }
-
-        alert(`Chamado aberto com sucesso! Protocolo: ${protocol}`);
-
-        document.getElementById('newTicketModal').classList.add('hidden');
-        document.getElementById('newTicketForm').reset();
-        
-        // Atualiza o dashboard correto
-        if (currentUser.user_metadata.role === 'admin') {
-            loadAdminDashboard();
+            alert(`Erro ao enviar chamado! ${insertError.message}`);
+            console.error('Erro de Insert:', insertError);
         } else {
-            loadClientDashboard(); 
+            alert(`Chamado ${protocol} aberto com sucesso!`);
+            document.getElementById('newTicketModal').classList.add('hidden');
+            document.getElementById('newTicketForm').reset();
+            loadClientDashboard(); // Atualiza a lista do cliente
         }
     });
 
+    // ------------------------------------------------------------------
+    // 4. FUNÇÕES DE PDF (INDIVIDUAL E EM LOTE)
+    // ------------------------------------------------------------------
 
-    // FUNÇÃO GERAR PDF INDIVIDUAL
-    async function generateTicketPDF(ticketId) {
-    // 1. Busca os dados do ticket
+    // 4.1. PDF INDIVIDUAL
+    window.generateTicketPDF = async function(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
             .select('*')
             .eq('id', ticketId)
             .single();
 
-        if (error || !ticket) {
-            console.error('Erro ao buscar dados do ticket:', error);
-            alert('Não foi possível gerar o PDF. Dados do chamado não encontrados. Verifique as políticas de RLS de SELECT.');
+        if (error) {
+            alert('Erro ao buscar dados do chamado para PDF!');
+            console.error(error);
             return;
         }
 
-        // 2. Cria o conteúdo HTML (com tags e estilos em linha para o PDF)
-        const statusColor = ticket.status === 'closed' ? '#10B981' : (ticket.status === 'open' ? '#F59E0B' : '#3B82F6');
-        const statusText = ticket.status.toUpperCase().replace('_', ' ');
-        
-        const attachmentSection = ticket.attachment_url ? 
-            `<p style="margin-bottom: 10px;"><strong>Anexo:</strong> <a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6; text-decoration: none;">Link para Anexo</a></p>` :
-            `<p style="margin-bottom: 10px;"><strong>Anexo:</strong> Nenhum</p>`;
-
-        const content = `
-            <div style="padding: 30px; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; border: 1px solid #e5e7eb;">
-                
-                <h1 style="color: #1f2937; font-size: 24px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
-                    Relatório de Chamado: #${ticket.protocol}
-                </h1>
-                
-                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 5px 0; width: 30%;"><strong>Status:</strong></td>
-                        <td style="padding: 5px 0;">
-                            <span style="font-weight: bold; color: ${statusColor};">${statusText}</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px 0;"><strong>Solicitante:</strong></td>
-                        <td style="padding: 5px 0;">${ticket.requester}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px 0;"><strong>Data de Abertura:</strong></td>
-                        <td style="padding: 5px 0;">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px 0;"><strong>Anexo:</strong></td>
-                        <td style="padding: 5px 0;">
-                            ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Nenhum'}
-                        </td>
-                    </tr>
-                </table>
-
-                <h2 style="color: #1f2937; font-size: 18px; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">
-                    Detalhes da Solicitação
-                </h2>
-                <p style="white-space: pre-wrap; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                    ${ticket.description}
-                </p>
-
-                <div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 12px; color: #6b7280;">
-                    <p>Documento gerado automaticamente pelo Sistema de Chamados T.I em ${new Date().toLocaleString('pt-BR')}</p>
-                </div>
-            </div>
+        const content = document.createElement('div');
+        content.style.padding = '20px';
+        content.style.fontFamily = 'Arial, sans-serif';
+        content.innerHTML = `
+            <h1 style="color: #3b82f6; text-align: center;">RELATÓRIO DE CHAMADO T.I</h1>
+            <hr style="border: 1px solid #e5e7eb; margin: 10px 0;">
+            <p><strong>Protocolo:</strong> ${ticket.protocol}</p>
+            <p><strong>Solicitante:</strong> ${ticket.requester}</p>
+            <p><strong>Status:</strong> ${ticket.status.toUpperCase().replace('_', ' ')}</p>
+            <p><strong>Aberto em:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+            ${ticket.closed_at ? `<p><strong>Encerrado em:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
+            <hr style="border: 1px solid #e5e7eb; margin: 10px 0;">
+            <h3>Descrição do Problema</h3>
+            <p>${ticket.description.replace(/\n/g, '<br>')}</p>
+            ${ticket.attachment_url ? `
+                <h3>Anexo</h3>
+                <p><a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Clique para visualizar o anexo.</a></p>
+            ` : ''}
         `;
 
-
-        // 3. Configuração e Geração do PDF
         const options = {
             margin: 10,
             filename: `Chamado-${ticket.protocol}.pdf`,
@@ -753,53 +696,118 @@
 
         html2pdf().from(content).set(options).save();
     }
+
+    // 4.2. LÓGICA DE BUSCA E GERAÇÃO DE PDF EM LOTE (30 DIAS)
     
-    window.generateTicketPDF = generateTicketPDF;
+    // Função de BUSCA (Onde estava o erro de lógica)
+    async function buscarTicketsUltimos30Dias() {
+        const trintaDiasAtras = new Date();
+        trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+        const dataLimiteISO = trintaDiasAtras.toISOString();
+
+        console.log(`Buscando tickets a partir de: ${dataLimiteISO}`);
+
+        const { data: tickets, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .gte('created_at', dataLimiteISO) // FILTRO CORRETO
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Erro na consulta do relatório:', error);
+            alert(`Erro ao buscar dados: ${error.message}`);
+            return null;
+        }
+        
+        return tickets;
+    }
+
+    // Função de GERAÇÃO EM LOTE
+    async function gerarRelatorioPDFLote() {
+        reportModal.classList.add('hidden');
+        
+        const tickets = await buscarTicketsUltimos30Dias();
+
+        if (!tickets) {
+            // A função de busca já alertou o erro, apenas paramos aqui
+            return;
+        }
+
+        if (tickets.length === 0) {
+            alert('Nenhum chamado encontrado nos últimos 30 dias para gerar o relatório.');
+            return;
+        }
+        
+        // 1. Cria o conteúdo HTML do relatório consolidado
+        const content = document.createElement('div');
+        content.style.padding = '20px';
+        content.style.fontFamily = 'Arial, sans-serif';
+        content.innerHTML = `
+            <h1 style="color: #3b82f6; text-align: center; margin-bottom: 5px;">RELATÓRIO CONSOLIDADO DE CHAMADOS</h1>
+            <h2 style="text-align: center; font-size: 1.2em; margin-top: 5px;">Últimos 30 Dias (Total: ${tickets.length} Chamados)</h2>
+            <p style="text-align: right; font-size: 0.8em;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+            <hr style="border: 2px solid #3b82f6; margin: 10px 0;">
+        `;
+        
+        // 2. Itera sobre os tickets e adiciona ao conteúdo
+        tickets.forEach((ticket, index) => {
+            const ticketHtml = `
+                <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px; border-radius: 5px; background-color: #f9f9f9;">
+                    <p style="font-weight: bold; color: #1f2937;">${index + 1}. Protocolo: ${ticket.protocol}</p>
+                    <p style="margin-left: 10px; font-size: 0.9em;">Solicitante: ${ticket.requester}</p>
+                    <p style="margin-left: 10px; font-size: 0.9em;">Status: ${ticket.status.toUpperCase().replace('_', ' ')}</p>
+                    <p style="margin-left: 10px; font-size: 0.9em;">Aberto em: ${new Date(ticket.created_at).toLocaleDateString('pt-BR')}</p>
+                    <p style="margin-left: 10px; font-size: 0.9em;">Descrição: ${ticket.description.substring(0, 100)}...</p>
+                    ${ticket.attachment_url ? `<p style="margin-left: 10px; font-size: 0.9em;">Anexo: Sim</p>` : ''}
+                </div>
+            `;
+            content.innerHTML += ticketHtml;
+        });
+
+        // 3. Gera e salva o PDF
+        const options = {
+            margin: 10,
+            filename: `Relatorio_30Dias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().from(content).set(options).save();
+        alert('Relatório consolidado gerado com sucesso!');
+    }
 
 
     // ------------------------------------------------------------------
-    // 4. FUNÇÕES GERAIS E INICIALIZAÇÃO
+    // 5. LISTENERS PARA MODAIS
     // ------------------------------------------------------------------
 
-    // Inicialização
-    document.addEventListener('DOMContentLoaded', checkSession);
+    // Ações do Admin
+    document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
+    document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
+
+    // Ações do Cliente
+    document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
+    document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
+
+    // Ações do Relatório
+    generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
+    document.getElementById('cancelReport').addEventListener('click', () => reportModal.classList.add('hidden'));
+    
+    // Confirmação do relatório em lote
+    confirmGeneratePDF.addEventListener('click', gerarRelatorioPDFLote);
+
 
     // Toggle de Tema
-    document.getElementById('themeToggle').addEventListener('click', function() {
+    document.getElementById('themeToggle').addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         document.body.classList.toggle('light-mode');
         const isDarkMode = document.body.classList.contains('dark-mode');
-        this.innerHTML = isDarkMode ? '🌙 Modo Claro' : '☀️ Modo Escuro';
+        document.getElementById('themeToggle').innerHTML = isDarkMode ? '🌙 Modo Claro' : '☀️ Modo Escuro';
     });
     
-    // Funções de Modal
-    document.getElementById('createUserBtn').addEventListener('click', () => {
-        document.getElementById('createUserModal').classList.remove('hidden');
-    });
-    document.getElementById('cancelCreateUser').addEventListener('click', () => {
-        document.getElementById('createUserModal').classList.add('hidden');
-    });
-    
-    document.getElementById('newTicketBtn').addEventListener('click', () => {
-        document.getElementById('newTicketModal').classList.remove('hidden');
-    });
-    document.getElementById('cancelNewTicket').addEventListener('click', () => {
-        document.getElementById('newTicketModal').classList.add('hidden');
-    });
-    
-    document.getElementById('generateReportBtn').addEventListener('click', () => {
-        document.getElementById('reportModal').classList.remove('hidden');
-    });
-    document.getElementById('cancelReport').addEventListener('click', () => {
-        document.getElementById('reportModal').classList.add('hidden');
-    });
-    
-    // Simulação da Geração de Relatório de Múltiplos Tickets (sem implementação real de filtro por data)
-    document.getElementById('generatePDF').addEventListener('click', async () => {
-        alert('A função de relatório completo está em desenvolvimento. Por enquanto, gere PDFs individuais na tabela.');
-        document.getElementById('reportModal').classList.add('hidden');
-    });
-
+    // Inicialização
+    checkSession();
 </script>
 </body>
 </html>
