@@ -141,6 +141,29 @@
         </div>
     </div>
 
+    <!-- Dashboard Cliente -->
+    <div id="clientDashboard" class="hidden">
+        <div class="max-w-4xl mx-auto p-6">
+            <!-- Botão para novo chamado -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
+                <button id="newTicketBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                    + Novo Chamado
+                </button>
+            </div>
+
+            <!-- Meus Chamados -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Meus Chamados</h3>
+                </div>
+                <div id="clientTicketsList" class="p-6">
+                    <!-- Chamados do cliente serão inseridos aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para criar usuário (Admin) -->
     <div id="createUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
@@ -175,13 +198,40 @@
         </div>
     </div>
 
+    <!-- Modal para novo chamado (Cliente) -->
+    <div id="newTicketModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
+            <form id="newTicketForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do Solicitante</label>
+                    <input type="text" id="requesterName" required 
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
+                    <textarea id="ticketDescription" required rows="4"
+                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
+                        Abrir Chamado
+                    </button>
+                    <button type="button" id="cancelNewTicket" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Configuração do Supabase
+        // Inicialização do Supabase
         const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
     
-        // Criar o admin se não existir
+        // Criar Admin se não existir
         async function createAdminIfNeeded() {
             const { data: existingAdmin, error } = await supabase
                 .from('users')
