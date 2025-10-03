@@ -265,46 +265,44 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
+   <!-- Carregue o script do Supabase primeiro -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
 
-    <script>
-       // Configuração do Supabase
-const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+<!-- Agora o seu código JS -->
+<script>
+    // Configuração do Supabase
+    const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    // Agora você pode usar a variável 'supabase' sem problemas
+    async function createAdminIfNeeded() {
+        const { data: existingAdmin, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', 'admin') // Verifica se já existe o admin com o nome "admin"
+            .single();
 
-// Agora você pode usar a variável `supabase` sem problemas
+        if (!existingAdmin) {
+            const { user, error: createError } = await supabase.auth.api.createUser({
+                email: 'admin@admin.com',
+                password: 'admin123',
+                user_metadata: { role: 'admin', username: 'admin' }
+            });
 
-async function createAdminIfNeeded() {
-    const { data: existingAdmin, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', 'admin') // Verifica se já existe o admin com o nome "admin"
-        .single();
-
-    if (!existingAdmin) {
-        // Criar o admin com um e-mail fictício, mas com "admin" como nome de usuário.
-        const { user, error: createError } = await supabase.auth.api.createUser({
-            email: 'admin@admin.com', // E-mail fictício
-            password: 'admin123', // Senha do admin
-            user_metadata: { 
-                role: 'admin',
-                username: 'admin' // Nome de usuário
-            },
-        });
-
-        if (createError) {
-            console.error('Erro ao criar o admin:', createError);
+            if (createError) {
+                console.error('Erro ao criar o admin:', createError);
+            } else {
+                console.log('Admin criado com sucesso!');
+            }
         } else {
-            console.log('Admin criado com sucesso!');
+            console.log('Admin já existe.');
         }
-    } else {
-        console.log('Admin já existe.');
     }
-}
 
-// Chama a função para criar o admin caso não exista
-createAdminIfNeeded();
+    createAdminIfNeeded();
+
+
 
 
 
