@@ -6,34 +6,33 @@
     <title>Sistema de Chamados T.I</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-        <style>
+    <style>
         body {
             box-sizing: border-box;
         }
-        
+
         /* Animações suaves para transições */
         .fade-in {
             animation: fadeIn 0.3s ease-in;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         /* Estilo para modo escuro */
         .dark-mode {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #e2e8f0;
         }
-        
+
         .light-mode {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #1a202c;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.19.0/dist/umd/supabase.min.js"></script>
-
 </head>
 <body class="min-h-screen transition-all duration-300 dark-mode">
     <!-- Header com logo e controles -->
@@ -142,29 +141,6 @@
         </div>
     </div>
 
-    <!-- Dashboard Cliente -->
-    <div id="clientDashboard" class="hidden">
-        <div class="max-w-4xl mx-auto p-6">
-            <!-- Botão para novo chamado -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
-                <button id="newTicketBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
-                    + Novo Chamado
-                </button>
-            </div>
-
-            <!-- Meus Chamados -->
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Meus Chamados</h3>
-                </div>
-                <div id="clientTicketsList" class="p-6">
-                    <!-- Chamados do cliente serão inseridos aqui -->
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal para criar usuário (Admin) -->
     <div id="createUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
@@ -199,113 +175,38 @@
         </div>
     </div>
 
-    <!-- Modal para novo chamado (Cliente) -->
-    <div id="newTicketModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
-            <form id="newTicketForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do Solicitante</label>
-                    <input type="text" id="requesterName" required 
-                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
-                    <textarea id="ticketDescription" required rows="4"
-                              class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
-                </div>
-                <div class="flex space-x-4">
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
-                        Abrir Chamado
-                    </button>
-                    <button type="button" id="cancelNewTicket" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para relatório -->
-    <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório PDF</h3>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Período</label>
-                    <select id="reportPeriod" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                        <option value="weekly">Semanal</option>
-                        <option value="monthly">Mensal</option>
-                    </select>
-                </div>
-                <div class="flex space-x-4">
-                    <button id="generatePDF" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors">
-                        Gerar PDF
-                    </button>
-                    <button id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
-                        Cancelar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rodapé -->
-    <footer class="bg-gray-800 text-white p-6 mt-12">
-        <div class="max-w-7xl mx-auto text-center">
-            <h4 class="text-lg font-semibold mb-4">Contatos para Suporte</h4>
-            <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-8">
-                <div class="flex items-center space-x-2">
-                    <span>📧</span>
-                    <a href="mailto:lfragozo563@gmail.com" class="hover:text-blue-400 transition-colors">lfragozo563@gmail.com</a>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <span>📱</span>
-                    <a href="tel:+5551993525004" class="hover:text-blue-400 transition-colors">51 99352-5004</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-   <!-- Carregue o script do Supabase primeiro -->
-
-<!-- Agora o seu código JS -->
-<script>
-    // Configuração do Supabase
-    const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    <script>
+        // Configuração do Supabase
+        const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
     
-    // Agora você pode usar a variável 'supabase' sem problemas
-    async function createAdminIfNeeded() {
-        const { data: existingAdmin, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('username', 'admin') // Verifica se já existe o admin com o nome "admin"
-            .single();
-
-        if (!existingAdmin) {
-            const { user, error: createError } = await supabase.auth.api.createUser({
-                email: 'admin@admin.com',
-                password: 'admin123',
-                user_metadata: { role: 'admin', username: 'admin' }
-            });
-
-            if (createError) {
-                console.error('Erro ao criar o admin:', createError);
+        // Criar o admin se não existir
+        async function createAdminIfNeeded() {
+            const { data: existingAdmin, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('username', 'admin') // Verifica se já existe o admin
+                .single();
+    
+            if (!existingAdmin) {
+                const { user, error: createError } = await supabase.auth.api.createUser({
+                    email: 'admin@admin.com', // E-mail fictício
+                    password: 'admin123', // Senha do admin
+                    user_metadata: { role: 'admin', username: 'admin' }
+                });
+    
+                if (createError) {
+                    console.error('Erro ao criar o admin:', createError);
+                } else {
+                    console.log('Admin criado com sucesso!');
+                }
             } else {
-                console.log('Admin criado com sucesso!');
+                console.log('Admin já existe.');
             }
-        } else {
-            console.log('Admin já existe.');
         }
-    }
 
-    createAdminIfNeeded();
-
-
-
-
+        createAdminIfNeeded();
 
         // Funções de login e autenticação
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -315,7 +216,7 @@
 
             // Login com Supabase
             const { data, error } = await supabase.auth.signInWithPassword({
-                email: username, 
+                email: username,
                 password: password,
             });
 
