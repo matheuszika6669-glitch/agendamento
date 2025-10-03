@@ -266,125 +266,97 @@
         </div>
     </footer>
 
-    <script>
+  <script>
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls';
 
-    // 🏆 CORREÇÃO AQUI: Use supabaseClient para evitar conflito com a função global 'supabase'
+    // Inicialização CORRIGIDA: Usa supabaseClient
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); 
 
     let currentUser = null;
-    // ... obtenha as referências do DOM para evitar erros de referência
+    
+    // Referências do DOM para evitar erros
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
     const clientDashboard = document.getElementById('clientDashboard');
 
 
-    // Função para criar admin automaticamente, se necessário
+    // Função para criar admin automaticamente (NOTA: Apenas verifica se o perfil existe)
     async function createAdminIfNeeded() {
-        // 🏆 CORREÇÃO: Use supabaseClient
+        // Verifica se o perfil "admin" existe na sua tabela 'users'
         const { data: existingAdmin, error } = await supabaseClient 
             .from('users')
             .select('*')
-            .eq('username', 'admin') // Verifica se já existe o admin com o nome "admin"
+            .eq('username', 'admin') 
             .single();
 
         if (!existingAdmin) {
-            // Criar o admin com um e-mail fictício
-            // ⚠️ NOTA: Supabase-js v2 usa `signInWithPassword`, não `auth.api.createUser`.
-            // Para criar um novo usuário com role, você deve usar `signUp` e depois inserir o role na tabela 'users' (se for o caso)
-            // ou usar a função de admin do servidor.
-            // Para este caso simples, vamos assumir que o admin já está criado ou que o login deve funcionar após a correção.
-            console.log('Admin não encontrado. Por favor, crie o admin no painel Supabase.');
-            // Se você quiser usar a autenticação do Supabase, o fluxo correto seria `signUp`.
-            // Exemplo de como seria o signup (apenas demonstração):
-            /*
-            const { data: newUser, error: createError } = await supabaseClient.auth.signUp({
-                email: 'admin@admin.com', 
-                password: 'admin123',
-            });
-            */
-            // Por enquanto, mantenho o `createAdminIfNeeded` apenas para avisar que a API usada no original está obsoleta (supabase.auth.api.createUser)
+            console.log('Admin não encontrado na tabela de perfis. Por favor, crie o usuário em Auth e vincule o UUID na tabela "users"!');
         } else {
-            console.log('Admin já existe.');
+            console.log('Perfil Admin encontrado.');
         }
     }
 
-    // Chama a função para criar o admin caso não exista (mantenho para a lógica do seu código)
+    // Chama a função
     createAdminIfNeeded();
 
 
-    // Funções de login e autenticação
+    // Funções de login e autenticação (LÓGICA CORRIGIDA)
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const username = document.getElementById('username').value;
+        // O campo 'username' está sendo usado como 'email' (ex: admin@admin.com)
+        const email = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        // Login com Supabase
-        // ⚠️ NOTA: O login com `supabase.auth.signInWithPassword` espera um email. Se 'username' for usado como email, ok.
-        // Se você usa o campo `username` para buscar o user na tabela `users` do Supabase e não para autenticação, a lógica deve mudar.
-        // Assumindo que você está usando o email `admin@admin.com` para o login 'admin', e a tabela 'users' para o role.
-
-        // 🏆 CORREÇÃO: Use supabaseClient
+        // 1. Tenta o LOGIN PADRÃO (seguro) do Supabase Auth
         const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-            // Tentativa de login com o 'username' como email
-            email: username + '@fake.com', // Tenta construir um email fictício
+            email: email, 
             password: password,
         });
 
         if (authError) {
-             // Caso falhe com o email fictício, faz uma busca direta na tabela 'users'
-             const { data: userData, error: userError } = await supabaseClient
-                 .from('users')
-                 .select('*')
-                 .eq('username', username)
-                 .eq('password', password) // ⚠️ CUIDADO: Senhas não devem ser salvas em texto puro!
-                 .single();
-
-             if (userData) {
-                 // Autenticação (não-Supabase Auth) bem-sucedida
-                 currentUser = userData;
-             } else {
-                 alert('Usuário ou senha incorretos!');
-                 return;
-             }
-        } else {
-            // Login do Supabase bem-sucedido. Agora, busca o role
-            // 🏆 CORREÇÃO: Use supabaseClient
-             const { data: userData, error: userError } = await supabaseClient
-                 .from('users')
-                 .select('role')
-                 .eq('id', authData.user.id)
-                 .single();
-
-             if (userData) {
-                 currentUser = authData.user;
-                 currentUser.user_metadata = { role: userData.role }; // Adiciona o role
-             } else {
-                 // Se não encontrou na tabela 'users', pode ser um novo user ou erro.
-                 alert('Login falhou ou role não encontrado!');
-                 await supabaseClient.auth.signOut();
-                 return;
-             }
+            alert('Usuário ou senha incorretos! Verifique as credenciais ou a chave API.');
+            return;
         }
 
+        // 2. Busca o ROLE do usuário na tabela 'users' (perfis)
+        const userId = authData.user.id;
 
-        // Se chegou aqui, o login foi um sucesso
-        loginScreen.classList.add('hidden');
+        const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('role') // Só precisamos da coluna role
+            .eq('id', userId)
+            .single();
         
-        if (currentUser.user_metadata.role === 'admin') {
-            adminDashboard.classList.remove('hidden');
-            loadAdminDashboard();
-        } else {
-            clientDashboard.classList.remove('hidden');
-            loadClientDashboard();
+        if (userError || !userData) {
+            alert('Perfil de usuário (role) não encontrado. Verifique se o UUID está inserido corretamente na sua tabela "users".');
+            await supabaseClient.auth.signOut(); // Força o logout
+            return;
         }
+
+        // Login e Role de Perfil OK
+        currentUser = authData.user;
+        currentUser.user_metadata = { role: userData.role }; // Adiciona o role para uso posterior
+
+        // Redirecionamento
+        loginScreen.classList.add('fade-out'); // Você pode adicionar animação aqui
+        setTimeout(() => {
+            loginScreen.classList.add('hidden');
+            loginScreen.classList.remove('fade-out');
+            
+            if (currentUser.user_metadata.role === 'admin') {
+                adminDashboard.classList.remove('hidden');
+                loadAdminDashboard();
+            } else {
+                clientDashboard.classList.remove('hidden');
+                loadClientDashboard();
+            }
+        }, 300); // Espera a animação (se implementada)
     });
 
     // Logout
-    document.getElementById('logoutBtn').addEventListener('click', async function() { // Tornei assíncrona
-        // 🏆 CORREÇÃO: Use supabaseClient e faça o logout
+    document.getElementById('logoutBtn').addEventListener('click', async function() {
         const { error } = await supabaseClient.auth.signOut();
 
         currentUser = null;
@@ -392,17 +364,29 @@
         adminDashboard.classList.add('hidden');
         clientDashboard.classList.add('hidden');
         document.getElementById('loginForm').reset();
+        document.body.scrollTop = 0; // Para o topo da página
     });
+
+    // Função dummy para carregar o dashboard do admin
+    async function loadAdminDashboard() {
+        loadAdminTickets();
+        // Aqui você carregaria as estatísticas e outros dados do admin
+    }
+
+    // Função dummy para carregar o dashboard do cliente
+    async function loadClientDashboard() {
+        // Aqui você carregaria os chamados específicos do cliente
+    }
 
     // Funções para gerenciar chamados
     async function loadAdminTickets() {
-        // 🏆 CORREÇÃO: Use supabaseClient
         const { data: tickets, error } = await supabaseClient
             .from('tickets')
-            .select('*');
+            .select('*')
+            .order('created_at', { ascending: false }); // Ordena pelo mais recente primeiro
 
-        // ... (o resto da função loadAdminTickets permanece o mesmo) ...
         if (error) {
+            console.error('Erro ao carregar chamados:', error);
             alert('Erro ao carregar chamados!');
             return;
         }
@@ -410,35 +394,62 @@
         const tbody = document.getElementById('adminTicketsList');
         tbody.innerHTML = '';
         
+        // Função auxiliar para obter a cor do status
+        const getStatusBadge = (status) => {
+            switch(status) {
+                case 'open': return '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Aberto</span>';
+                case 'in_progress': return '<span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">Em Progresso</span>';
+                case 'closed': return '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Encerrado</span>';
+                default: return '';
+            }
+        };
+
         tickets.forEach(ticket => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
             
-            const statusBadge = ticket.status === 'open' 
-                ? '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Aberto</span>'
-                : '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Encerrado</span>';
+            const statusBadge = getStatusBadge(ticket.status);
             
-            const actions = ticket.status === 'open'
-                ? `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>
-                    <button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>
-                    <button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>` 
-                : `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
+            // Renderiza as ações com base no status
+            let actions = '';
+            if (ticket.status === 'open' || ticket.status === 'in_progress') {
+                if (ticket.status === 'open') {
+                    actions += `<button onclick="startTicket(${ticket.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
+                }
+                actions += `<button onclick="closeTicket(${ticket.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
+            }
+            actions += `<button onclick="deleteTicket(${ticket.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
             
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
-                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">${ticket.description}</td>
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
                 <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.createdAt).toLocaleString('pt-BR')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
-                `;
+            `;
             
             tbody.appendChild(row);
         });
     }
 
+    // Função para iniciar o chamado
+    async function startTicket(ticketId) {
+        const { error } = await supabaseClient
+            .from('tickets')
+            .update({ status: 'in_progress' })
+            .match({ id: ticketId });
+
+        if (error) {
+            alert('Erro ao iniciar chamado!');
+        } else {
+            alert('Chamado iniciado!');
+            loadAdminDashboard();
+        }
+    }
+
+    // Função para fechar o chamado
     async function closeTicket(ticketId) {
-        // 🏆 CORREÇÃO: Use supabaseClient
         const { error } = await supabaseClient
             .from('tickets')
             .update({ status: 'closed', closed_at: new Date().toISOString() })
@@ -451,30 +462,25 @@
             loadAdminDashboard();
         }
     }
-    
-    // Faltam implementações, mas adicionei as funções de dashboard aqui para evitar erros de referência
-    function loadAdminDashboard() {
-        loadAdminTickets();
-        // Lógica para carregar estatísticas, etc.
+
+    // Função para deletar o chamado
+    async function deleteTicket(ticketId) {
+        if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
+        
+        const { error } = await supabaseClient
+            .from('tickets')
+            .delete()
+            .match({ id: ticketId });
+
+        if (error) {
+            alert('Erro ao excluir chamado!');
+        } else {
+            alert('Chamado excluído com sucesso!');
+            loadAdminDashboard();
+        }
     }
 
-    function loadClientDashboard() {
-        // Lógica para carregar chamados do cliente
-    }
-
-    function startTicket(ticketId) {
-        // Lógica para iniciar o chamado
-        alert(`Chamado ${ticketId} iniciado!`);
-        loadAdminDashboard();
-    }
-
-    function deleteTicket(ticketId) {
-        // Lógica para excluir o chamado
-        alert(`Chamado ${ticketId} excluído!`);
-        loadAdminDashboard();
-    }
-
-    // Lógica do botão de tema (adaptada para o escopo)
+    // Lógica do botão de tema
     const themeToggle = document.getElementById('themeToggle');
     themeToggle.addEventListener('click', () => {
         const body = document.body;
@@ -489,6 +495,16 @@
             body.classList.add('dark-mode');
             themeToggle.innerHTML = '🌙 Modo Claro';
         }
+    });
+
+    // Você precisa implementar as outras funções (criar usuário, abrir chamado, gerar PDF, etc.)
+    // Exemplo:
+    document.getElementById('newTicketBtn').addEventListener('click', () => {
+        document.getElementById('newTicketModal').classList.remove('hidden');
+    });
+
+    document.getElementById('cancelNewTicket').addEventListener('click', () => {
+        document.getElementById('newTicketModal').classList.add('hidden');
     });
 
 </script>
