@@ -127,7 +127,7 @@
                             </tr>
                         </thead>
                         <tbody id="adminTicketsList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -269,13 +269,23 @@
     const adminDashboard = document.getElementById('adminDashboard');
     const clientDashboard = document.getElementById('clientDashboard');
 
+    // Função auxiliar para mostrar o dashboard correto
+    function showDashboard(role) {
+        loginScreen.classList.add('hidden');
+        adminDashboard.classList.add('hidden');
+        clientDashboard.classList.add('hidden');
 
-    // Função de verificação do Admin (apenas para console)
-    async function createAdminIfNeeded() {
-        // Esta função apenas verifica no console, não afeta o login real.
+        if (role === 'admin') {
+            adminDashboard.classList.add('fade-in');
+            adminDashboard.classList.remove('hidden');
+            loadAdminDashboard();
+        } else if (role === 'client') {
+            clientDashboard.classList.add('fade-in');
+            clientDashboard.classList.remove('hidden');
+            loadClientDashboard();
+        }
+        document.body.scrollTop = document.documentElement.scrollTop = 0;
     }
-    createAdminIfNeeded();
-
 
     // ------------------------------------------------------------------
     // 1. FUNÇÕES DE LOGIN E AUTENTICAÇÃO
@@ -283,7 +293,6 @@
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // No HTML o campo está como 'username', mas deve ser o email para o Supabase Auth
         const email = document.getElementById('username').value; 
         const password = document.getElementById('password').value;
 
@@ -301,36 +310,7 @@
 
         // Busca o ROLE do usuário
         const userId = authData.user.id;
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('role')
-            .eq('id', userId)
-            .single();
-        
-        if (userError || !userData) {
-            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users".');
-            await supabaseClient.auth.signOut();
-            return;
-        }
-
-        // Sucesso e Redirecionamento
-        currentUser = authData.user;
-        currentUser.user_metadata = { role: userData.role };
-
-        // Animação de transição
-        loginScreen.classList.add('hidden'); // Oculta a tela de login
-        
-        if (currentUser.user_metadata.role === 'admin') {
-            adminDashboard.classList.add('fade-in');
-            adminDashboard.classList.remove('hidden');
-            loadAdminDashboard();
-        } else {
-            clientDashboard.classList.add('fade-in');
-            clientDashboard.classList.remove('hidden');
-            loadClientDashboard();
-        }
-        
-        document.body.scrollTop = document.documentElement.scrollTop = 0; // Volta para o topo
+        await fetchUserRole(userId);
     });
 
     // Logout
@@ -343,16 +323,51 @@
         document.getElementById('loginForm').reset();
         document.body.scrollTop = document.documentElement.scrollTop = 0;
     });
+    
+    // Busca o ROLE e redireciona (Reutilizável para login e verificação de sessão)
+    async function fetchUserRole(userId) {
+        const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('role')
+            .eq('id', userId)
+            .single();
+        
+        if (userError || !userData) {
+            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users".');
+            await supabaseClient.auth.signOut();
+            return;
+        }
 
+        currentUser = (await supabaseClient.auth.getSession()).data.session.user; // Obtém o objeto user completo com o token
+        currentUser.user_metadata = { role: userData.role };
+        showDashboard(userData.role);
+    }
+    
+    // Verifica a sessão ao carregar a página
+    async function checkSession() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            currentUser = session.user;
+            await fetchUserRole(currentUser.id);
+        } else {
+            // Garante que a tela de login esteja visível se não houver sessão
+            loginScreen.classList.remove('hidden');
+        }
+    }
+    
     // ------------------------------------------------------------------
     // 2. FUNÇÕES DE DASHBOARD E CARREGAMENTO
     // ------------------------------------------------------------------
     async function loadAdminDashboard() {
         await loadAdminTickets();
-        // Implementação das estatísticas (Ainda precisa de implementação real do Supabase count)
-        document.getElementById('openTicketsCount').textContent = '...'; 
-        document.getElementById('closedTicketsCount').textContent = '...';
-        document.getElementById('usersCount').textContent = '...';
+        // Implementação real das estatísticas (exemplo: usar .count())
+        const { count: openCount } = await supabaseClient.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'open');
+        const { count: closedCount } = await supabaseClient.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'closed');
+        const { count: usersCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'client');
+        
+        document.getElementById('openTicketsCount').textContent = openCount || 0; 
+        document.getElementById('closedTicketsCount').textContent = closedCount || 0;
+        document.getElementById('usersCount').textContent = usersCount || 0;
     }
 
     async function loadClientDashboard() {
@@ -388,31 +403,29 @@
             row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
             const statusBadge = getStatusBadge(ticket.status);
             
-           let actions = '';
-// Os IDs precisam de aspas simples ('${ticket.id}') no onclick, pois são strings (UUIDs)
+            let actions = '';
+            // Os IDs precisam de aspas simples ('${ticket.id}') no onclick, pois são strings (UUIDs)
 
-if (ticket.status === 'open') {
-    actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
-}
+            if (ticket.status === 'open') {
+                actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
+            }
 
-if (ticket.status === 'open' || ticket.status === 'in_progress') {
-    actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
-}
+            if (ticket.status === 'open' || ticket.status === 'in_progress') {
+                actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
+            }
 
-// CORRIGIDO: Este é o botão PDF, agora com aspas simples
-actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
+            actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
-actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
+            actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
 
-row.innerHTML = `
-    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
-    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
-    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
-    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
-    <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
-`;
-// ...
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
+            `;
             
             tbody.appendChild(row);
         });
@@ -505,6 +518,11 @@ row.innerHTML = `
             loadAdminDashboard();
         }
     }
+    
+    // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
+    window.startTicket = startTicket;
+    window.closeTicket = closeTicket;
+    window.deleteTicket = deleteTicket;
 
     // ------------------------------------------------------------------
     // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
@@ -519,6 +537,8 @@ row.innerHTML = `
         const newPassword = document.getElementById('newPassword').value;
 
         // 1. Criar o Usuário no Supabase AUTH
+        // Observação: Por padrão, usuários criados via signUp com a chave anon não exigem e-mail de confirmação.
+        // Se você ativou o "Confirm Email" nas configurações do Auth, este novo usuário estará sem "confirmed_at".
         const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             email: newEmail,
             password: newPassword,
@@ -541,9 +561,7 @@ row.innerHTML = `
             });
 
         if (userInsertError) {
-            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}. Usuário será deletado.`);
-            // Tenta deletar a conta recém-criada no Auth se a inserção do perfil falhar
-            await supabaseClient.auth.admin.deleteUser(newUserId); 
+            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}. Limpe o usuário manualmente no Supabase Auth.`);
             return;
         }
 
@@ -551,9 +569,10 @@ row.innerHTML = `
 
         document.getElementById('createUserModal').classList.add('hidden');
         document.getElementById('createUserForm').reset();
+        loadAdminDashboard(); // Atualiza a contagem de usuários
     });
 
-    // FUNÇÃO ABRIR NOVO CHAMADO (CORRIGIDA E IMPLEMENTADA)
+    // FUNÇÃO ABRIR NOVO CHAMADO 
     document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -590,7 +609,7 @@ row.innerHTML = `
         document.getElementById('newTicketModal').classList.add('hidden');
         document.getElementById('newTicketForm').reset();
         
-        // Atualiza o dashboard
+        // Atualiza o dashboard correto
         if (currentUser.user_metadata.role === 'admin') {
             loadAdminDashboard();
         } else {
@@ -602,74 +621,78 @@ row.innerHTML = `
     // FUNÇÃO GERAR PDF INDIVIDUAL
     async function generateTicketPDF(ticketId) {
     // 1. Busca os dados do ticket
-    const { data: ticket, error } = await supabaseClient
-        .from('tickets')
-        .select('*')
-        .eq('id', ticketId)
-        .single();
+        const { data: ticket, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('id', ticketId)
+            .single();
 
-    if (error || !ticket) {
-        console.error('Erro ao buscar dados do ticket:', error);
-        alert('Não foi possível gerar o PDF. Dados do chamado não encontrados. Verifique as políticas de RLS de SELECT.');
-        return;
+        if (error || !ticket) {
+            console.error('Erro ao buscar dados do ticket:', error);
+            alert('Não foi possível gerar o PDF. Dados do chamado não encontrados. Verifique as políticas de RLS de SELECT.');
+            return;
+        }
+
+        // 2. Cria o conteúdo HTML (com tags e estilos em linha para o PDF)
+        const statusColor = ticket.status === 'closed' ? '#10B981' : (ticket.status === 'open' ? '#F59E0B' : '#3B82F6');
+        const statusText = ticket.status.toUpperCase().replace('_', ' ');
+
+        const content = `
+            <div style="padding: 30px; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; border: 1px solid #e5e7eb;">
+                
+                <h1 style="color: #1f2937; font-size: 24px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
+                    Relatório de Chamado: #${ticket.protocol}
+                </h1>
+                
+                <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px 0; width: 30%;"><strong>Status:</strong></td>
+                        <td style="padding: 5px 0;">
+                            <span style="font-weight: bold; color: ${statusColor};">${statusText}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0;"><strong>Solicitante:</strong></td>
+                        <td style="padding: 5px 0;">${ticket.requester}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0;"><strong>ID Cliente (UUID):</strong></td>
+                        <td style="padding: 5px 0; font-size: 10px;">${ticket.user_id}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0;"><strong>Aberto em:</strong></td>
+                        <td style="padding: 5px 0;">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
+                    </tr>
+                    ${ticket.closed_at ? `
+                    <tr>
+                        <td style="padding: 5px 0;"><strong>Fechado em:</strong></td>
+                        <td style="padding: 5px 0;">${new Date(ticket.closed_at).toLocaleString('pt-BR')}</td>
+                    </tr>` : ''}
+                </table>
+
+                <h2 style="margin-top: 20px; font-size: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; color: #3b82f6;">Detalhes do Problema</h2>
+                <p style="white-space: pre-wrap; margin-top: 10px; padding: 10px; background-color: #f9fafb; border-radius: 5px; border: 1px solid #e5e7eb;">${ticket.description}</p>
+            </div>
+        `;
+
+        // 3. Geração do PDF
+        if (typeof html2pdf !== 'undefined') {
+            html2pdf().from(content).set({
+                margin: 10,
+                filename: `chamado_${ticket.protocol}.pdf`,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).save();
+        } else {
+            console.error('ERRO: html2pdf.js não está carregado.');
+            alert('Erro: Biblioteca de PDF não carregada.');
+        }
     }
-
-    // 2. Cria o conteúdo HTML (com tags e estilos em linha para o PDF)
-    const statusColor = ticket.status === 'closed' ? '#10B981' : (ticket.status === 'open' ? '#F59E0B' : '#3B82F6');
-    const statusText = ticket.status.toUpperCase().replace('_', ' ');
-
-    const content = `
-        <div style="padding: 30px; font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1f2937; border: 1px solid #e5e7eb;">
-            
-            <h1 style="color: #1f2937; font-size: 24px; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
-                Relatório de Chamado: #${ticket.protocol}
-            </h1>
-            
-            <table style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
-                <tr>
-                    <td style="padding: 5px 0;"><strong>Status:</strong></td>
-                    <td style="padding: 5px 0;">
-                        <span style="font-weight: bold; color: ${statusColor};">${statusText}</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding: 5px 0;"><strong>Solicitante:</strong></td>
-                    <td style="padding: 5px 0;">${ticket.requester}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 5px 0;"><strong>ID Cliente (UUID):</strong></td>
-                    <td style="padding: 5px 0; font-size: 10px;">${ticket.user_id}</td>
-                </tr>
-                <tr>
-                    <td style="padding: 5px 0;"><strong>Aberto em:</strong></td>
-                    <td style="padding: 5px 0;">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
-                </tr>
-                ${ticket.closed_at ? `
-                <tr>
-                    <td style="padding: 5px 0;"><strong>Fechado em:</strong></td>
-                    <td style="padding: 5px 0;">${new Date(ticket.closed_at).toLocaleString('pt-BR')}</td>
-                </tr>` : ''}
-            </table>
-
-            <h2 style="margin-top: 20px; font-size: 20px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; color: #3b82f6;">Detalhes do Problema</h2>
-            <p style="white-space: pre-wrap; margin-top: 10px; padding: 10px; background-color: #f9fafb; border-radius: 5px;">${ticket.description}</p>
-        </div>
-    `;
-
-    // 3. Geração do PDF
-    if (typeof html2pdf !== 'undefined') {
-        html2pdf().from(content).set({
-            margin: 10,
-            filename: `chamado_${ticket.protocol}.pdf`,
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).save();
-    } else {
-        console.error('ERRO: html2pdf.js não está carregado. Verifique o CDN no HTML.');
-        alert('Erro: Biblioteca de PDF não carregada.');
-    }
-}
     
+    // TORNA A FUNÇÃO DE GERAÇÃO DE PDF GLOBAL
+    window.generateTicketPDF = generateTicketPDF;
+
+
     // ------------------------------------------------------------------
     // 4. LÓGICA DE MODAIS E TEMA
     // ------------------------------------------------------------------
@@ -680,6 +703,7 @@ row.innerHTML = `
     });
     document.getElementById('cancelNewTicket').addEventListener('click', () => {
         document.getElementById('newTicketModal').classList.add('hidden');
+        document.getElementById('newTicketForm').reset();
     });
     
     document.getElementById('createUserBtn').addEventListener('click', () => {
@@ -687,9 +711,9 @@ row.innerHTML = `
     });
     document.getElementById('cancelCreateUser').addEventListener('click', () => {
         document.getElementById('createUserModal').classList.add('hidden');
+        document.getElementById('createUserForm').reset();
     });
-    
-    // Abrir modal de relatório 
+
     document.getElementById('generateReportBtn').addEventListener('click', () => {
         document.getElementById('reportModal').classList.remove('hidden');
     });
@@ -698,23 +722,18 @@ row.innerHTML = `
     });
 
 
-    // Lógica do botão de tema
+    // Lógica do Theme Toggle
     const themeToggle = document.getElementById('themeToggle');
+    let isDarkMode = true;
+
     themeToggle.addEventListener('click', () => {
-        const body = document.body;
-        const isDarkMode = body.classList.contains('dark-mode');
-
-        if (isDarkMode) {
-            body.classList.remove('dark-mode');
-            body.classList.add('light-mode');
-            themeToggle.innerHTML = '🌞 Modo Escuro';
-        } else {
-            body.classList.remove('light-mode');
-            body.classList.add('dark-mode');
-            themeToggle.innerHTML = '🌙 Modo Claro';
-        }
+        isDarkMode = !isDarkMode;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        document.body.classList.toggle('light-mode', !isDarkMode);
+        themeToggle.innerHTML = isDarkMode ? '🌙 Modo Claro' : '☀️ Modo Escuro';
     });
-
+    
+    // Inicialização: Verifica se já está logado
+    checkSession();
 </script>
-</body>
 </html>
