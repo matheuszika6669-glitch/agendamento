@@ -88,6 +88,9 @@
                     <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
                         📊 Gerar Relatório 30 Dias
                     </button>
+                    <button id="addServiceBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        ➕ Adicionar Serviço
+                    </button>
                 </div>
             </div>
 
@@ -203,6 +206,35 @@
         </div>
     </div>
     
+    <div id="addServiceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Adicionar Novo Serviço</h3>
+            <form id="addServiceForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do Serviço</label>
+                    <input type="text" id="serviceName" required 
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: Manutenção em Servidor">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor (R$)</label>
+                    <input type="number" step="0.01" id="serviceValue" required 
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 250.00">
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors">
+                        Salvar Serviço
+                    </button>
+                    <button type="button" id="cancelAddService" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório</h3>
@@ -238,7 +270,7 @@
 <script>
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    // 🛑 IMPORTANTE: VERIFIQUE se esta chave é a "anon public" correta do seu projeto.
+    // 🛑 IMPORTANTE: A CHAVE ANON PUBLIC ESTÁ INCLUÍDA AQUI, CERTIFIQUE-SE QUE ESTÁ CORRETA.
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; 
 
     // Inicialização do Supabase
@@ -252,6 +284,7 @@
     const clientDashboard = document.getElementById('clientDashboard');
     const createUserModal = document.getElementById('createUserModal');
     const newTicketModal = document.getElementById('newTicketModal');
+    const addServiceModal = document.getElementById('addServiceModal'); // NOVO MODAL
     const reportModal = document.getElementById('reportModal');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
@@ -313,9 +346,8 @@
     });
     
     // Busca o ROLE e redireciona (Reutilizável para login e verificação de sessão)
-    // 🛑 FUNÇÃO CORRIGIDA PARA TRATAR O ERRO DE UNDEFINED (API KEY)
     async function fetchUserRole(userId) {
-        try {
+        try { // Bloco Try/Catch para capturar erro de API Key incorreta
             const { data: userData, error: userError } = await supabaseClient
                 .from('users')
                 .select('role, username')
@@ -323,7 +355,6 @@
                 .single();
 
             if (userError || !userData) {
-                // Se falhar por RLS ou falta de dados (e não por um erro de objeto undefined)
                 alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users" e as políticas RLS.');
                 await supabaseClient.auth.signOut();
                 return;
@@ -331,7 +362,6 @@
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
-                // A sessão sumiu
                 await supabaseClient.auth.signOut();
                 return;
             }
@@ -342,11 +372,9 @@
             showDashboard(userData.role);
 
         } catch (e) {
-            // Este bloco captura o erro 'Cannot read properties of undefined' ou falhas de rede/API Key.
             console.error("Erro fatal ao tentar buscar o perfil (Provavelmente API Key ou RLS):", e);
             alert('Erro de conexão ou autenticação. Por favor, verifique a CHAVE API (anon public) e a URL no código.');
             await supabaseClient.auth.signOut();
-            // A tela de login permanecerá.
         }
     }
     
@@ -670,11 +698,54 @@
         loadClientDashboard(); // Atualiza a lista de chamados do cliente
     });
 
+    // NOVO: FUNÇÃO ADICIONAR SERVIÇO
+    document.getElementById('addServiceForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const serviceName = document.getElementById('serviceName').value;
+        const serviceValue = parseFloat(document.getElementById('serviceValue').value);
+
+        if (!currentUser || currentUser.user_metadata.role !== 'admin') {
+            alert('Acesso negado. Apenas administradores podem adicionar serviços.');
+            return;
+        }
+
+        if (isNaN(serviceValue) || serviceValue <= 0) {
+            alert('Por favor, insira um valor válido para o serviço (maior que zero).');
+            return;
+        }
+
+        // Insere o novo serviço na tabela 'services'
+        // ATENÇÃO: Esta tabela deve ser criada manualmente no Supabase (ver passo 2)
+        const { error: insertError } = await supabaseClient
+            .from('services') 
+            .insert({
+                service_name: serviceName,
+                service_value: serviceValue,
+                created_by: currentUser.id // Opcional, mas útil para RLS
+            });
+
+        if (insertError) {
+            console.error('Erro ao adicionar serviço:', insertError);
+            alert(`Erro ao adicionar serviço: ${insertError.message}. Verifique se a tabela 'services' existe no Supabase.`);
+            return;
+        }
+
+        alert(`Serviço "${serviceName}" adicionado com sucesso!`);
+
+        document.getElementById('addServiceModal').classList.add('hidden');
+        document.getElementById('addServiceForm').reset();
+    });
+
     // Funções de controle dos modais
     document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
     document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
     document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
     document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
+    
+    // NOVO: Controle do Modal de Serviço
+    document.getElementById('addServiceBtn').addEventListener('click', () => addServiceModal.classList.remove('hidden'));
+    document.getElementById('cancelAddService').addEventListener('click', () => addServiceModal.classList.add('hidden'));
     
     // Funções de controle do modal de relatório
     generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
@@ -683,7 +754,7 @@
 
 
     // ------------------------------------------------------------------
-    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E MELHORADAS)
+    // 4. FUNÇÕES DE RELATÓRIO PDF
     // ------------------------------------------------------------------
 
     // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de lote)
@@ -753,7 +824,7 @@
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // FUNÇÃO DE GERAÇÃO EM LOTE - CORRIGIDA COM MELHOR CSS, CNPJ E ASSINATURAS
+    // FUNÇÃO DE GERAÇÃO EM LOTE 
     async function gerarRelatorioPDFLote() {
         reportModal.classList.add('hidden');
         
@@ -768,11 +839,11 @@
             return;
         }
         
-        // 1. Cria o conteúdo HTML do relatório consolidado com o novo CSS e CNPJ
+        // 1. Cria o conteúdo HTML do relatório consolidado
         const content = document.createElement('div');
         content.style.padding = '20px';
         content.style.fontFamily = 'Arial, sans-serif';
-        content.style.color = '#1f2937'; // Texto escuro para melhor contraste
+        content.style.color = '#1f2937'; 
         
         content.innerHTML = `
             <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
@@ -786,7 +857,7 @@
             <p style="text-align: right; font-size: 0.8em; color: #6b7280;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
         `;
         
-        // 2. Itera sobre os tickets e adiciona ao conteúdo com CSS melhorado
+        // 2. Itera sobre os tickets e adiciona ao conteúdo
         tickets.forEach((ticket, index) => {
             const statusColor = ticket.status === 'closed' ? '#10b981' : (ticket.status === 'open' ? '#f59e0b' : '#3b82f6');
             const statusText = ticket.status.toUpperCase().replace('_', ' ');
