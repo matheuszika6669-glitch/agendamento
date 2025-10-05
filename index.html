@@ -264,6 +264,9 @@
     </footer>
 
 <script>
+// Correção de Carregamento DOM: Envolvemos todo o código em 'DOMContentLoaded'
+document.addEventListener('DOMContentLoaded', () => {
+
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
     // 🛑 IMPORTANTE: SUBSTITUA 'SUA_CHAVE_ANON_AQUI' PELA CHAVE ANON REAL DO SEU PROJETO
@@ -285,7 +288,7 @@
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
     const themeToggle = document.getElementById('themeToggle');
 
-    // Referências dos botões de Cancelar (Evita o erro de "null")
+    // Referências dos botões de Cancelar 
     const cancelCreateUser = document.getElementById('cancelCreateUser'); 
     const cancelNewTicket = document.getElementById('cancelNewTicket');
     const cancelReport = document.getElementById('cancelReport'); 
@@ -296,7 +299,7 @@
     const serviceTypeSelect = document.getElementById('serviceTypeSelect');
     const serviceValueInput = document.getElementById('serviceValueInput');
     const serviceTicketId = document.getElementById('serviceTicketId');
-    // ✅ CORREÇÃO CRÍTICA: Referência do botão de Cancelar o Serviço
+    // CORREÇÃO CRÍTICA: Referência do botão de Cancelar o Serviço
     const cancelSetService = document.getElementById('cancelSetService');
 
 
@@ -354,7 +357,7 @@
 
         // Busca o ROLE do usuário
         const userId = authData.user.id;
-        await fetchUserRole(userId);
+        fetchUserRole(userId);
     });
 
     // Logout
@@ -643,11 +646,11 @@
     window.openSetServiceModal = openSetServiceModal; // Torna global para o onclick da tabela
 
     // Cancelar Modais (Geral)
-    cancelCreateUser.addEventListener('click', () => createUserModal.classList.add('hidden'));
-    cancelNewTicket.addEventListener('click', () => newTicketModal.classList.add('hidden'));
-    cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
-    // ✅ CORREÇÃO CRÍTICA: Listener para o novo modal de serviço
-    cancelSetService.addEventListener('click', () => setServiceModal.classList.add('hidden'));
+    if(cancelCreateUser) cancelCreateUser.addEventListener('click', () => createUserModal.classList.add('hidden'));
+    if(cancelNewTicket) cancelNewTicket.addEventListener('click', () => newTicketModal.classList.add('hidden'));
+    if(cancelReport) cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
+    // Listener para o novo modal de serviço (o alvo da correção)
+    if(cancelSetService) cancelSetService.addEventListener('click', () => setServiceModal.classList.add('hidden'));
 
 
     // SUBMIT: Novo Usuário (Admin)
@@ -941,6 +944,7 @@
     // 6. INÍCIO DA APLICAÇÃO
     // ------------------------------------------------------------------
     checkSession();
+});
 </script>
 </body>
 </html>
