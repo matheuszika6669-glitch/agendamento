@@ -14,11 +14,11 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .dark-mode { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e2e8f0; }
         .light-mode { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #1a202c; }
-
+        
         /* Estilo para garantir que o input file seja clicável no mobile */
         #ticketAttachment {
             cursor: pointer;
-            padding-top: 8px; /* Adiciona padding para facilitar o toque */
+            padding-top: 8px; 
             padding-bottom: 8px;
         }
     </style>
@@ -237,7 +237,6 @@
             </form>
         </div>
     </div>
-
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório</h3>
@@ -281,7 +280,6 @@
 <script>
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    // 🛑 IMPORTANTE: A CHAVE ANON PUBLIC ESTÁ INCLUÍDA AQUI, CERTIFIQUE-SE QUE ESTÁ CORRETA.
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; 
 
     // Inicialização do Supabase
@@ -295,7 +293,7 @@
     const clientDashboard = document.getElementById('clientDashboard');
     const createUserModal = document.getElementById('createUserModal');
     const newTicketModal = document.getElementById('newTicketModal');
-    const closeTicketModal = document.getElementById('closeTicketModal'); 
+    const closeTicketModal = document.getElementById('closeTicketModal'); // RE-INCLUÍDO
     const reportModal = document.getElementById('reportModal');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
@@ -606,9 +604,7 @@
     
     // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
     window.startTicket = startTicket;
-    // window.closeTicket é substituída por openCloseTicketModal
-    window.deleteTicket = deleteTicket;
-
+    window.deleteTicket = deleteTicket; // closeTicket foi substituído por openCloseTicketModal
     // ------------------------------------------------------------------
     // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
     // ------------------------------------------------------------------
@@ -754,7 +750,7 @@
 
 
     // ------------------------------------------------------------------
-    // 4. FUNÇÕES DE RELATÓRIO PDF
+    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E MELHORADAS)
     // ------------------------------------------------------------------
 
     // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de lote)
@@ -798,7 +794,7 @@
                     ${ticket.service_details.replace(/\n/g, '<br>')}
                 </div>
               `
-            : '<p style="margin-top: 20px;"><strong>Serviço/Valor:</strong> Não Informado.</p>';
+            : '<p style="margin-top: 20px;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
 
 
         const content = document.createElement('div');
@@ -822,10 +818,10 @@
 
             <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
             
-            <div style="margin-top: 50px; text-align: center; padding: 20px; border: 1px dashed #ccc; background-color: #f4f4f4;">
-                <h4 style="margin-bottom: 20px; color: #4b5563;">ESPAÇO RESERVADO PARA ASSINATURA DIGITAL / CARIMBO</h4>
-                <div style="height: 60px;"></div>
-                <p style="font-size: 0.9em; margin-top: 10px;">Assinatura do Responsável T.I. e Assinatura do Cliente/Gestor</p>
+            <div style="margin-top: 80px; text-align: center; padding-top: 20px;">
+                <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
+                <p style="font-size: 0.9em; margin-top: 5px;">Assinatura (T.I. e Cliente/Gestor)</p>
+                <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
             </div>
         `;
 
@@ -841,7 +837,7 @@
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM O CAMPO DE VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA
+    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA
     async function gerarRelatorioPDFLote() {
         
         // 1. CAPTURA O VALOR DIGITADO NO MODAL
@@ -923,17 +919,23 @@
 
         // 5. Adiciona o VALOR TOTAL e a seção de rodapé e assinatura
         content.innerHTML += `
-            ${totalValueHtml} <div style="margin-top: 60px; padding-top: 20px; page-break-before: auto;">
+            ${totalValueHtml} <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
                 <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
                     Este relatório consolida a atividade de chamados de T.I. no período.
                 </p>
                 
-                <div style="margin-top: 20px; text-align: center; padding: 20px; border: 1px dashed #ccc; background-color: #f4f4f4;">
-                    <h4 style="margin-bottom: 20px; color: #4b5563;">ESPAÇO RESERVADO PARA ASSINATURA DIGITAL / CARIMBO</h4>
-                    <div style="height: 60px;"></div>
-                    <p style="font-size: 0.9em; margin-top: 10px;">Assinatura do Responsável T.I. e Assinatura do Cliente/Gestor</p>
-                </div>
-
+                <table style="width: 100%; border-collapse: collapse; margin-top: 50px;">
+                    <tr>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
+                        </td>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
+                        </td>
+                    </tr>
+                </table>
                 <div style="text-align: center; margin-top: 30px; font-size: 0.75em; color: #9ca3af;">
                     <p>Documento gerado eletronicamente.</p>
                 </div>
