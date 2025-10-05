@@ -296,7 +296,7 @@
     const serviceTypeSelect = document.getElementById('serviceTypeSelect');
     const serviceValueInput = document.getElementById('serviceValueInput');
     const serviceTicketId = document.getElementById('serviceTicketId');
-    // 💡 CORREÇÃO 💡 Referência do botão de Cancelar o Serviço
+    // ✅ CORREÇÃO CRÍTICA: Referência do botão de Cancelar o Serviço
     const cancelSetService = document.getElementById('cancelSetService');
 
 
@@ -646,7 +646,7 @@
     cancelCreateUser.addEventListener('click', () => createUserModal.classList.add('hidden'));
     cancelNewTicket.addEventListener('click', () => newTicketModal.classList.add('hidden'));
     cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
-    // 💡 CORREÇÃO 💡 Listener para o novo modal de serviço
+    // ✅ CORREÇÃO CRÍTICA: Listener para o novo modal de serviço
     cancelSetService.addEventListener('click', () => setServiceModal.classList.add('hidden'));
 
 
