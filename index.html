@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    // 🛑 IMPORTANTE: SUBSTITUA 'SUA_CHAVE_ANON_AQUI' PELA CHAVE ANON REAL DO SEU PROJETO
+    // 🛑 ATENÇÃO: SUBSTITUA 'SUA_NOVA_CHAVE_ANON_AQUI' PELA CHAVE ANON REAL DO SEU PROJETO SUPABASE
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; 
 
     // Inicialização do Supabase
@@ -299,7 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const serviceTypeSelect = document.getElementById('serviceTypeSelect');
     const serviceValueInput = document.getElementById('serviceValueInput');
     const serviceTicketId = document.getElementById('serviceTicketId');
-    // CORREÇÃO CRÍTICA: Referência do botão de Cancelar o Serviço
     const cancelSetService = document.getElementById('cancelSetService');
 
 
@@ -349,15 +348,23 @@ document.addEventListener('DOMContentLoaded', () => {
             password: password,
         });
 
+        // ✅ CORREÇÃO APLICADA AQUI: Trata o erro do Auth de forma robusta
         if (authError) {
-            alert('Usuário ou senha incorretos! Verifique as credenciais e a chave API no código.');
+            alert('Erro de autenticação (Usuário ou senha incorretos OU Falha na Chave API): ' + authError.message);
             console.error("Auth Error:", authError.message);
+            return;
+        }
+        
+        // Verifica se realmente há um usuário autenticado
+        if (!authData || !authData.user) {
+            alert('Falha desconhecida na autenticação. Verifique o console.');
+            console.error("Auth Data is missing:", authData);
             return;
         }
 
         // Busca o ROLE do usuário
         const userId = authData.user.id;
-        fetchUserRole(userId);
+        await fetchUserRole(userId);
     });
 
     // Logout
@@ -373,13 +380,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Busca o ROLE e redireciona (Reutilizável para login e verificação de sessão)
     async function fetchUserRole(userId) {
+        // ✅ CORREÇÃO APLICADA AQUI: Adiciona .maybeSingle() para lidar com 0 resultados sem erro de API
         const { data: userData, error: userError } = await supabaseClient
             .from('users')
             .select('role, username')
             .eq('id', userId)
-            .single();
+            .maybeSingle(); 
         
-        if (userError || !userData) {
+        // ✅ CORREÇÃO APLICADA AQUI: Trata o erro de forma robusta
+        if (userError) {
+            alert('Erro ao buscar perfil (verifique a Chave API ou as RLS no Supabase): ' + userError.message);
+            console.error("User Role Error:", userError.message);
+            await supabaseClient.auth.signOut();
+            return;
+        }
+        
+        // Se a busca retornar nulo (usuário do auth sem perfil na tabela 'users')
+        if (!userData) {
             alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users".');
             await supabaseClient.auth.signOut();
             return;
