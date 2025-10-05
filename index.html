@@ -46,13 +46,13 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário (Email)</label>
                     <input type="text" id="username" required 
-                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
                     <input type="password" id="password" required 
-                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
@@ -102,8 +102,6 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Protocolo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solicitante</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Serviço</th> 
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Valor</th> 
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Anexo</th> 
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data/Hora</th>
@@ -145,19 +143,19 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome de Usuário</label>
                     <input type="text" id="newUsername" required 
-                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                     <input type="email" id="newEmail" required 
-                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="ex: cliente@dominio.com">
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="ex: cliente@dominio.com">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
                     <input type="password" id="newPassword" required 
-                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 </div>
                 
                 <div class="flex space-x-4">
@@ -184,7 +182,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
                     <textarea id="ticketDescription" rows="4" required 
-                                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
+                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
                 </div>
                 
                 <div>
@@ -213,41 +211,15 @@
                 <button id="confirmGeneratePDF" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors">
                     Confirmar e Gerar PDF
                 </button>
-                <button type="button" id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
+                <button id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
                     Cancelar
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="setServiceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Definir Serviço e Valor</h3>
-            <form id="setServiceForm" class="space-y-4">
-                <input type="hidden" id="serviceTicketId">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo de Serviço</label>
-                    <select id="serviceTypeSelect" required
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Cobrado (R$)</label>
-                    <input type="text" id="serviceValueInput" required
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 150,00 ou 80,00 + Valor da peça">
-                </div>
-                <div class="flex space-x-4">
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
-                        Salvar Serviço
-                    </button>
-                    <button type="button" id="cancelSetService" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-        <footer class="bg-gray-800 text-white p-6 mt-12">
+
+    <footer class="bg-gray-800 text-white p-6 mt-12">
         <div class="max-w-7xl mx-auto text-center">
             <h4 class="text-lg font-semibold mb-4">Contatos para Suporte</h4>
             <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-8">
@@ -264,12 +236,9 @@
     </footer>
 
 <script>
-// Correção de Carregamento DOM: Envolvemos todo o código em 'DOMContentLoaded'
-document.addEventListener('DOMContentLoaded', () => {
-
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    // 🛑 ATENÇÃO: SUBSTITUA 'SUA_NOVA_CHAVE_ANON_AQUI' PELA CHAVE ANON REAL DO SEU PROJETO SUPABASE
+    // 🛑 IMPORTANTE: VERIFIQUE se esta chave é a "anon public" correta do seu projeto.
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; 
 
     // Inicialização do Supabase
@@ -287,33 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
     const themeToggle = document.getElementById('themeToggle');
-
-    // Referências dos botões de Cancelar 
-    const cancelCreateUser = document.getElementById('cancelCreateUser'); 
-    const cancelNewTicket = document.getElementById('cancelNewTicket');
-    const cancelReport = document.getElementById('cancelReport'); 
-
-
-    // NOVAS REFERÊNCIAS DO MODAL DE SERVIÇO
-    const setServiceModal = document.getElementById('setServiceModal');
-    const serviceTypeSelect = document.getElementById('serviceTypeSelect');
-    const serviceValueInput = document.getElementById('serviceValueInput');
-    const serviceTicketId = document.getElementById('serviceTicketId');
-    const cancelSetService = document.getElementById('cancelSetService');
-
-
-    // LISTA DE SERVIÇOS E VALORES (EXTRAÍDA DA PROPOSTA PDF) 
-    const SERVICES_LIST = [
-        { name: "Formatação de computador/notebook + Configuração", value: "R$ 150,00" },
-        { name: "Configuração de computador/notebook para uso empresarial", value: "R$ 50,00" },
-        { name: "Manutenção em computador", value: "R$ 50,00 + Valor da peça" },
-        { name: "Manutenção em notebook", value: "R$ 80,00 + Valor da peça" },
-        { name: "Configurações de rede e impressora", value: "R$ 50,00 por Hora" },
-        { name: "Deslocamento de suporte presencial em Guaíba", value: "R$ 10,00" },
-        { name: "Deslocamento de suporte presencial em Canoas", value: "R$ 80,00" },
-        { name: "Suporte remoto via anydesk", value: "R$ 250,00 Mensais sem limites de horas." }
-    ];
-
 
     // Função auxiliar para mostrar o dashboard correto
     function showDashboard(role) {
@@ -348,17 +290,9 @@ document.addEventListener('DOMContentLoaded', () => {
             password: password,
         });
 
-        // ✅ CORREÇÃO APLICADA AQUI: Trata o erro do Auth de forma robusta
         if (authError) {
-            alert('Erro de autenticação (Usuário ou senha incorretos OU Falha na Chave API): ' + authError.message);
+            alert('Usuário ou senha incorretos! Verifique as credenciais e a chave API no código.');
             console.error("Auth Error:", authError.message);
-            return;
-        }
-        
-        // Verifica se realmente há um usuário autenticado
-        if (!authData || !authData.user) {
-            alert('Falha desconhecida na autenticação. Verifique o console.');
-            console.error("Auth Data is missing:", authData);
             return;
         }
 
@@ -379,33 +313,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Busca o ROLE e redireciona (Reutilizável para login e verificação de sessão)
+    // 🛑 FUNÇÃO CORRIGIDA PARA TRATAR O ERRO DE UNDEFINED (API KEY)
     async function fetchUserRole(userId) {
-        // ✅ CORREÇÃO APLICADA AQUI: Adiciona .maybeSingle() para lidar com 0 resultados sem erro de API
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('role, username')
-            .eq('id', userId)
-            .maybeSingle(); 
-        
-        // ✅ CORREÇÃO APLICADA AQUI: Trata o erro de forma robusta
-        if (userError) {
-            alert('Erro ao buscar perfil (verifique a Chave API ou as RLS no Supabase): ' + userError.message);
-            console.error("User Role Error:", userError.message);
-            await supabaseClient.auth.signOut();
-            return;
-        }
-        
-        // Se a busca retornar nulo (usuário do auth sem perfil na tabela 'users')
-        if (!userData) {
-            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users".');
-            await supabaseClient.auth.signOut();
-            return;
-        }
+        try {
+            const { data: userData, error: userError } = await supabaseClient
+                .from('users')
+                .select('role, username')
+                .eq('id', userId)
+                .single();
 
-        const session = (await supabaseClient.auth.getSession()).data.session;
-        currentUser = session.user; // Obtém o objeto user completo
-        currentUser.user_metadata = { role: userData.role, username: userData.username };
-        showDashboard(userData.role);
+            if (userError || !userData) {
+                // Se falhar por RLS ou falta de dados (e não por um erro de objeto undefined)
+                alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users" e as políticas RLS.');
+                await supabaseClient.auth.signOut();
+                return;
+            }
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                // A sessão sumiu
+                await supabaseClient.auth.signOut();
+                return;
+            }
+            
+            // Atualiza o objeto global currentUser
+            currentUser = session.user; 
+            currentUser.user_metadata = { role: userData.role, username: userData.username };
+            showDashboard(userData.role);
+
+        } catch (e) {
+            // Este bloco captura o erro 'Cannot read properties of undefined' ou falhas de rede/API Key.
+            console.error("Erro fatal ao tentar buscar o perfil (Provavelmente API Key ou RLS):", e);
+            alert('Erro de conexão ou autenticação. Por favor, verifique a CHAVE API (anon public) e a URL no código.');
+            await supabaseClient.auth.signOut();
+            // A tela de login permanecerá.
+        }
     }
     
     // Verifica a sessão ao carregar a página
@@ -471,12 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusBadge = getStatusBadge(ticket.status);
             
             let actions = '';
+            // Os IDs precisam de aspas simples ('${ticket.id}') no onclick, pois são strings (UUIDs)
 
-            // Botão de definir serviço (Aparece se não estiver encerrado)
-            if (ticket.status !== 'closed') {
-                actions += `<button onclick="openSetServiceModal('${ticket.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm mr-2">Serviço</button>`;
-            }
-            
             if (ticket.status === 'open') {
                 actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
             }
@@ -485,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
             
-            // Botão PDF Individual
+            // Botão PDF Individual (mantido para compatibilidade)
             actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
@@ -495,18 +433,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `<a href="${ticket.attachment_url}" target="_blank" class="text-blue-500 hover:text-blue-700 transition-colors">🔗 Ver Anexo</a>`
                 : 'N/A';
 
-            // Lógica para exibir o Serviço e Valor
-            const serviceTypeDisplay = ticket.service_type || 'A definir';
-            const serviceValueDisplay = ticket.service_value || 'N/A';
-            const serviceColor = ticket.service_type ? 'text-green-600 dark:text-green-400 font-semibold' : 'text-red-600 dark:text-red-400';
-
-
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
-                <td class="px-6 py-4 text-sm ${serviceColor}">${serviceTypeDisplay}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm ${serviceColor}">${serviceValueDisplay}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">${attachmentLink}</td>
                 <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(ticket.status)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
@@ -547,25 +477,18 @@ document.addEventListener('DOMContentLoaded', () => {
              const attachmentHtml = ticket.attachment_url 
                  ? `<a href="${ticket.attachment_url}" target="_blank" class="text-sm text-blue-500 hover:underline">Ver Anexo</a>`
                  : '';
-             
-             // Exibir Serviço e Valor se já definidos
-             const serviceInfo = ticket.service_type 
-                 ? `<p class="text-sm text-gray-700 dark:text-gray-200 mt-2">Serviço: <span class="font-medium">${ticket.service_type}</span></p>
-                    <p class="text-sm text-gray-700 dark:text-gray-200">Valor: <span class="font-medium">${ticket.service_value}</span></p>`
-                 : '<p class="text-sm text-red-500 mt-2">Serviço e Valor ainda não definidos pelo Admin.</p>';
 
              listDiv.innerHTML += `
                  <div class="p-4 mb-4 border rounded-lg shadow dark:bg-gray-700 dark:border-gray-600">
-                      <div class="flex justify-between items-center mb-2">
-                          <h4 class="font-bold text-gray-900 dark:text-white">Protocolo: ${ticket.protocol}</h4>
-                          <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
-                      </div>
-                      <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
-                        ${serviceInfo}
-                      <div class="flex justify-between items-center text-xs text-gray-400 mt-2 border-t pt-2 dark:border-gray-600">
-                          <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                          ${attachmentHtml} 
-                      </div>
+                     <div class="flex justify-between items-center mb-2">
+                         <h4 class="font-bold text-gray-900 dark:text-white">Protocolo: ${ticket.protocol}</h4>
+                         <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
+                     </div>
+                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
+                     <div class="flex justify-between items-center text-xs text-gray-400">
+                         <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                         ${attachmentHtml} 
+                     </div>
                  </div>
              `;
         });
@@ -606,7 +529,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function deleteTicket(ticketId) {
         if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
         
-        // Excluir o registro do banco de dados (que deve acionar a remoção do Storage, se configurado via trigger)
+        // 🛑 Lógica para deletar o arquivo anexo no Storage (deixada para futura implementação)
+        
         const { error } = await supabaseClient
             .from('tickets')
             .delete()
@@ -614,211 +538,172 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error) {
             alert('Erro ao excluir chamado!');
-            console.error(error);
         } else {
             alert('Chamado excluído com sucesso!');
             loadAdminDashboard();
         }
     }
     
-    // TORNA AS FUNÇÕES GLOBAIS PARA SEREM CHAMADAS PELO HTML
+    // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
     window.startTicket = startTicket;
     window.closeTicket = closeTicket;
     window.deleteTicket = deleteTicket;
 
-
     // ------------------------------------------------------------------
-    // 3. MODAIS E FORMULÁRIOS
+    // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
     // ------------------------------------------------------------------
 
-    // Criação de Usuário (Admin)
-    document.getElementById('createUserBtn').addEventListener('click', () => {
-        createUserModal.classList.remove('hidden');
-    });
-    
-    // Abrir Novo Ticket (Cliente)
-    document.getElementById('newTicketBtn').addEventListener('click', () => {
-        newTicketModal.classList.remove('hidden');
-    });
-    
-    // Abrir Relatório (Admin)
-    generateReportBtn.addEventListener('click', () => {
-        reportModal.classList.remove('hidden');
-    });
-
-    // Função para abrir o Modal de Definição de Serviço
-    function openSetServiceModal(ticketId) {
-        serviceTicketId.value = ticketId;
-        setServiceModal.classList.remove('hidden');
-        
-        // Limpa e preenche o select
-        serviceTypeSelect.innerHTML = '<option value="" disabled selected>Selecione o Serviço</option>';
-        SERVICES_LIST.forEach(service => {
-            const option = document.createElement('option');
-            option.value = service.name;
-            option.textContent = service.name;
-            serviceTypeSelect.appendChild(option);
-        });
-    }
-    window.openSetServiceModal = openSetServiceModal; // Torna global para o onclick da tabela
-
-    // Cancelar Modais (Geral)
-    if(cancelCreateUser) cancelCreateUser.addEventListener('click', () => createUserModal.classList.add('hidden'));
-    if(cancelNewTicket) cancelNewTicket.addEventListener('click', () => newTicketModal.classList.add('hidden'));
-    if(cancelReport) cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
-    // Listener para o novo modal de serviço (o alvo da correção)
-    if(cancelSetService) cancelSetService.addEventListener('click', () => setServiceModal.classList.add('hidden'));
-
-
-    // SUBMIT: Novo Usuário (Admin)
+    // FUNÇÃO CRIAR USUÁRIO 
     document.getElementById('createUserForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const email = document.getElementById('newEmail').value;
-        const password = document.getElementById('newPassword').value;
-        const username = document.getElementById('newUsername').value;
+        
+        const newUsername = document.getElementById('newUsername').value;
+        const newEmail = document.getElementById('newEmail').value; 
+        const newPassword = document.getElementById('newPassword').value;
 
-        // 1. Cria o usuário no Supabase Auth
+        // 1. Criar o Usuário no Supabase AUTH
         const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-            email,
-            password,
+            email: newEmail,
+            password: newPassword,
         });
 
         if (authError) {
-            alert('Erro ao criar usuário: ' + authError.message);
+            alert(`Erro ao criar conta: ${authError.message}`);
             return;
         }
 
-        // 2. Insere o perfil na tabela 'users'
-        const userId = authData.user.id;
-        const { error: profileError } = await supabaseClient
+        // 2. Inserir o Perfil (Role) na Tabela 'users'
+        const newUserId = authData.user.id;
+        
+        const { error: userInsertError } = await supabaseClient
             .from('users')
-            .insert([
-                { id: userId, username: username, role: 'client' }
-            ]);
+            .insert({
+                id: newUserId,
+                username: newUsername,
+                role: 'client' // Define o papel como cliente
+            });
 
-        if (profileError) {
-            alert('Usuário criado, mas erro ao salvar perfil: ' + profileError.message);
-            // Opcional: Aqui você pode deletar o usuário criado no Auth para evitar inconsistência.
+        if (userInsertError) {
+            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}. Limpe o usuário manualmente no Supabase Auth.`);
             return;
         }
 
-        alert('Usuário Cliente criado com sucesso!');
+        alert(`Usuário cliente "${newUsername}" criado com sucesso! Email de ativação enviado.`);
+
+        document.getElementById('createUserModal').classList.add('hidden');
         document.getElementById('createUserForm').reset();
-        createUserModal.classList.add('hidden');
-        loadAdminDashboard();
+        loadAdminDashboard(); // Atualiza a contagem de usuários
     });
 
-
-    // SUBMIT: Novo Chamado (Cliente)
+    // FUNÇÃO ABRIR NOVO CHAMADO (ATUALIZADA PARA UPLOAD)
     document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const requester = document.getElementById('requesterName').value;
+        if (!currentUser || !currentUser.id) {
+            alert('Você precisa estar logado para abrir um chamado.');
+            return;
+        }
+
+        const requesterName = document.getElementById('requesterName').value;
         const description = document.getElementById('ticketDescription').value;
-        const attachmentFile = document.getElementById('ticketAttachment').files[0];
-        const userId = currentUser.id;
-
-        if (!userId) {
-            alert('Erro de autenticação. Tente fazer login novamente.');
-            return;
-        }
-
+        const attachmentInput = document.getElementById('ticketAttachment');
+        const file = attachmentInput.files[0];
+        
         let attachmentUrl = null;
+        const protocol = 'TICKET-' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-        // 1. Upload do Anexo (se houver)
-        if (attachmentFile) {
-            if (attachmentFile.size > 5 * 1024 * 1024) { // 5MB limit
-                alert('O arquivo excede o limite de 5MB.');
-                return;
-            }
-
-            const fileName = `${userId}/${Date.now()}_${attachmentFile.name.replace(/\s/g, '_')}`;
-
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                .from('ticket_attachments')
-                .upload(fileName, attachmentFile);
-
-            if (uploadError) {
-                alert('Erro ao fazer upload do anexo: ' + uploadError.message);
-                return;
-            }
-
-            // Pega a URL pública
-            const { data: publicUrlData } = supabaseClient.storage
-                .from('ticket_attachments')
-                .getPublicUrl(uploadData.path);
+        // 1. UPLOAD DO ARQUIVO PARA O SUPABASE STORAGE (SE HOUVER ARQUIVO)
+        if (file) {
+            // Gera um caminho único: client_user_id/protocolo-timestamp.ext
+            const fileExt = file.name.split('.').pop();
+            const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
+            const bucketName = 'ticket_attachments'; 
             
-            attachmentUrl = publicUrlData.publicUrl;
-        }
-
-        // 2. Cria o Protocolo (Usando timestamp para garantir unicidade no front-end)
-        const protocol = 'TI' + Date.now().toString().slice(-8);
-
-
-        // 3. Insere o Ticket no Supabase
-        const { error: ticketError } = await supabaseClient
-            .from('tickets')
-            .insert([
-                { 
-                    protocol,
-                    requester,
-                    description,
-                    user_id: userId,
-                    attachment_url: attachmentUrl 
+            try {
+                const { error: uploadError } = await supabaseClient.storage
+                    .from(bucketName)
+                    .upload(filePath, file, {
+                        cacheControl: '3600',
+                        upsert: false 
+                    });
+                    
+                if (uploadError) {
+                    throw uploadError;
                 }
-            ]);
-
-        if (ticketError) {
-            alert('Erro ao criar chamado: ' + ticketError.message);
-            console.error(ticketError);
-            return;
+                
+                // 2. Obtém a URL pública do arquivo
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from(bucketName)
+                    .getPublicUrl(filePath);
+                
+                attachmentUrl = publicUrlData.publicUrl;
+                
+            } catch (uploadError) {
+                alert(`Erro ao fazer upload do arquivo: ${uploadError.message}. Verifique o Supabase Storage e as políticas de RLS.`);
+                console.error('Erro de Upload:', uploadError);
+                return; 
+            }
         }
 
-        alert(`Chamado ${protocol} criado com sucesso!`);
-        document.getElementById('newTicketForm').reset();
-        document.getElementById('requesterName').value = currentUser.user_metadata.username; // Preenche novamente
-        newTicketModal.classList.add('hidden');
-        loadClientDashboard();
-    });
-    
-    // SUBMIT: Definir Serviço e Valor (Admin)
-    document.getElementById('setServiceForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const ticketId = serviceTicketId.value;
-        const serviceType = serviceTypeSelect.value;
-        const serviceValue = serviceValueInput.value;
-
-        if (!ticketId || !serviceType || !serviceValue) {
-            alert('Dados inválidos. Por favor, preencha todos os campos.');
-            return;
-        }
-
-        const { error } = await supabaseClient
+        // 3. INSERÇÃO DO NOVO CHAMADO NO BANCO DE DADOS
+        const { error: insertError } = await supabaseClient
             .from('tickets')
-            .update({ 
-                service_type: serviceType, 
-                service_value: serviceValue,
-                status: 'in_progress' // Opção: Inicia o ticket automaticamente
-            })
-            .eq('id', ticketId);
+            .insert({
+                protocol: protocol,
+                requester: requesterName,
+                description: description,
+                attachment_url: attachmentUrl, // Insere a URL ou NULL
+                user_id: currentUser.id,
+                status: 'open'
+            });
+
+        if (insertError) {
+            alert(`Erro ao abrir chamado: ${insertError.message}`);
+            // Se falhar a inserção, você deve tentar deletar o arquivo do storage
+            return;
+        }
+
+        alert(`Chamado aberto com sucesso! Protocolo: ${protocol}`);
+
+        document.getElementById('newTicketModal').classList.add('hidden');
+        document.getElementById('newTicketForm').reset();
+        loadClientDashboard(); // Atualiza a lista de chamados do cliente
+    });
+
+    // Funções de controle dos modais
+    document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
+    document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
+    document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
+    document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
+    
+    // Funções de controle do modal de relatório
+    generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
+    cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
+    confirmGeneratePDF.addEventListener('click', gerarRelatorioPDFLote);
+
+
+    // ------------------------------------------------------------------
+    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E MELHORADAS)
+    // ------------------------------------------------------------------
+
+    // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de lote)
+    async function buscarTicketsUltimos30Dias() {
+        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data: tickets, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .gte('created_at', trintaDiasAtras) // Filtra por data
+            .order('created_at', { ascending: false });
 
         if (error) {
-            alert('Erro ao salvar serviço e valor!');
-            console.error(error);
-        } else {
-            alert('Serviço e valor salvos com sucesso!');
-            setServiceModal.classList.add('hidden');
-            loadAdminDashboard();
+            alert('Erro ao buscar tickets para o relatório: ' + error.message);
+            return null;
         }
-    });
-
-
-    // ------------------------------------------------------------------
-    // 4. GERAÇÃO DE PDF
-    // ------------------------------------------------------------------
-
-    // PDF INDIVIDUAL
+        return tickets;
+    }
+    
+    // Geração de PDF Individual (Mantida por compatibilidade)
     async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
@@ -827,44 +712,38 @@ document.addEventListener('DOMContentLoaded', () => {
             .single();
 
         if (error || !ticket) {
-            alert('Chamado não encontrado.');
+            alert('Erro ao buscar detalhes do chamado.');
             return;
         }
+        
+        const statusText = ticket.status.toUpperCase().replace('_', ' ');
+        const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
 
-        const attachmentLink = ticket.attachment_url 
-            ? `<a href="${ticket.attachment_url}" target="_blank" style="color: blue; text-decoration: underline;">Ver Anexo</a>`
-            : 'N/A';
-
-        const content = `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h1 style="color: #4a5568; border-bottom: 2px solid #ccc; padding-bottom: 10px;">Relatório de Chamado - Protocolo ${ticket.protocol}</h1>
-                
-                <p><strong>CNPJ:</strong> 54.677.769/0001-78</p>
-                <p><strong>Data de Abertura:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                <p><strong>Status:</strong> <span style="font-weight: bold; color: ${ticket.status === 'closed' ? 'green' : 'red'};">${ticket.status.toUpperCase().replace('_', ' ')}</span></p>
-                ${ticket.closed_at ? `<p><strong>Data de Encerramento:</strong> ${new Date(ticket.closed_at).toLocaleString('pt-BR')}</p>` : ''}
-                
-                <hr style="margin: 15px 0;">
-
-                <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-                <p><strong>ID do Usuário:</strong> ${ticket.user_id}</p>
-                
-                <h2 style="color: #4a5568; margin-top: 20px; font-size: 1.2em;">Descrição do Problema:</h2>
-                <div style="background: #f7f7f7; padding: 10px; border-radius: 5px; white-space: pre-wrap;">${ticket.description}</div>
-                
-                <h2 style="color: #4a5568; margin-top: 20px; font-size: 1.2em;">Informações de Serviço:</h2>
-                <p><strong>Tipo de Serviço:</strong> ${ticket.service_type || 'A definir'}</p>
-                <p><strong>Valor Cobrado:</strong> ${ticket.service_value || 'N/A'}</p>
-
-                <h2 style="color: #4a5568; margin-top: 20px; font-size: 1.2em;">Anexo:</h2>
-                <p>${attachmentLink}</p>
+        const content = document.createElement('div');
+        content.style.padding = '20px';
+        content.style.fontFamily = 'Arial, sans-serif';
+        content.innerHTML = `
+            <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;">Protocolo: ${ticket.protocol}</p>
+            </div>
+            <p><strong>Solicitante:</strong> ${ticket.requester}</p>
+            <p><strong>Aberto em:</strong> ${dateCreated}</p>
+            <p><strong>Status:</strong> ${statusText}</p>
+            <p><strong>Descrição:</strong></p>
+            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9;">
+                ${ticket.description.replace(/\n/g, '<br>')}
+            </div>
+            <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
+            <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px dashed #ccc;">
+                <p>Assinatura do Responsável T.I:</p>
+                <div style="width: 200px; height: 1px; border-top: 1px solid #000; margin: 10px auto;"></div>
             </div>
         `;
 
         const options = {
             margin: 10,
-            filename: `Chamado_${ticket.protocol}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
+            filename: `${ticket.protocol}.pdf`,
             html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
@@ -874,53 +753,86 @@ document.addEventListener('DOMContentLoaded', () => {
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // PDF EM LOTE (Relatório)
-    confirmGeneratePDF.addEventListener('click', async () => {
-        await gerarRelatorioPDFLote();
-        reportModal.classList.add('hidden');
-    });
-
+    // FUNÇÃO DE GERAÇÃO EM LOTE - CORRIGIDA COM MELHOR CSS, CNPJ E ASSINATURAS
     async function gerarRelatorioPDFLote() {
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        reportModal.classList.add('hidden');
+        
+        const tickets = await buscarTicketsUltimos30Dias();
 
-        const { data: tickets, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .gte('created_at', thirtyDaysAgo) // Filtra os últimos 30 dias
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            alert('Erro ao gerar relatório: ' + error.message);
+        if (!tickets) {
             return;
         }
-        
+
         if (tickets.length === 0) {
             alert('Nenhum chamado encontrado nos últimos 30 dias para gerar o relatório.');
             return;
         }
+        
+        // 1. Cria o conteúdo HTML do relatório consolidado com o novo CSS e CNPJ
+        const content = document.createElement('div');
+        content.style.padding = '20px';
+        content.style.fontFamily = 'Arial, sans-serif';
+        content.style.color = '#1f2937'; // Texto escuro para melhor contraste
+        
+        content.innerHTML = `
+            <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO CONSOLIDADO DE CHAMADOS</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563;">CNPJ: 54.677.769/0001-78</p>
+            </div>
 
-        let ticketsHtml = '';
-        tickets.forEach(ticket => {
-            ticketsHtml += `
-                <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
-                    <p><strong>Protocolo:</strong> ${ticket.protocol}</p>
-                    <p><strong>Status:</strong> ${ticket.status.toUpperCase().replace('_', ' ')}</p>
-                    <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-                    <p><strong>Aberto em:</strong> ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                    <p><strong>Serviço/Valor:</strong> ${ticket.service_type || 'N/A'} / ${ticket.service_value || 'N/A'}</p>
-                    <p><strong>Descrição:</strong> ${ticket.description.substring(0, 100)}...</p>
+            <h2 style="text-align: center; font-size: 1.2em; margin-top: 5px; color: #4b5563;">
+                Últimos 30 Dias (Total: ${tickets.length} Chamados)
+            </h2>
+            <p style="text-align: right; font-size: 0.8em; color: #6b7280;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+        `;
+        
+        // 2. Itera sobre os tickets e adiciona ao conteúdo com CSS melhorado
+        tickets.forEach((ticket, index) => {
+            const statusColor = ticket.status === 'closed' ? '#10b981' : (ticket.status === 'open' ? '#f59e0b' : '#3b82f6');
+            const statusText = ticket.status.toUpperCase().replace('_', ' ');
+            const ticketDescription = ticket.description ? ticket.description.substring(0, 150) + (ticket.description.length > 150 ? '...' : '') : 'N/A';
+            const requesterName = ticket.requester || 'N/A';
+            const createdAtDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : 'N/A';
+
+            const ticketHtml = `
+                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <p style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
+                        ${index + 1}. Protocolo: ${ticket.protocol} 
+                        <span style="float: right; font-weight: normal; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${statusText}</span>
+                    </p>
+                    <div style="font-size: 0.9em; line-height: 1.5;">
+                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
+                        <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
+                        <p style="margin: 2px 0;"><strong>Descrição:</strong> ${ticketDescription}</p>
+                        <p style="margin: 2px 0; color: ${ticket.attachment_url ? '#3b82f6' : '#6b7280'};"><strong>Anexo:</strong> ${ticket.attachment_url ? 'Sim (Verificado)' : 'Não'}</p>
+                    </div>
                 </div>
             `;
+            content.innerHTML += ticketHtml;
         });
 
-        const content = `
-            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h1 style="color: #4a5568; border-bottom: 2px solid #ccc; padding-bottom: 10px;">RELATÓRIO CONSOLIDADO DE CHAMADOS (ÚLTIMOS 30 DIAS)</h1>
-                <p><strong>Período:</strong> ${new Date(thirtyDaysAgo).toLocaleDateString('pt-BR')} até ${new Date().toLocaleDateString('pt-BR')}</p>
-                <p><strong>Total de Chamados:</strong> ${tickets.length}</p>
-                <hr style="margin: 15px 0;">
+        // 3. Adiciona a seção de rodapé e assinatura
+        content.innerHTML += `
+            <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
+                <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
+                    Este relatório consolida a atividade de chamados de T.I. no período.
+                </p>
                 
-                ${ticketsHtml}
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
+                        </td>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
+                        </td>
+                    </tr>
+                </table>
+                <div style="text-align: center; margin-top: 30px; font-size: 0.75em; color: #9ca3af;">
+                    <p>Documento gerado eletronicamente.</p>
+                </div>
             </div>
         `;
 
@@ -937,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Relatório consolidado gerado com sucesso!');
     }
     
-    // TORNA A FUNÇÃO DE GERAÇÃO EM LOTE GLOBAL
+    // TORNA A FUNÇÃO DE GERAÇÃO EM LOTE GLOBA L
     window.gerarRelatorioPDFLote = gerarRelatorioPDFLote;
 
 
@@ -957,11 +869,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ------------------------------------------------------------------
-    // 6. INÍCIO DA APLICAÇÃO
-    // ------------------------------------------------------------------
+    // Inicia a verificação de sessão ao carregar a página
     checkSession();
-});
 </script>
+
 </body>
 </html>
