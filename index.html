@@ -12,188 +12,81 @@
         body { box-sizing: border-box; }
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Tema Escuro - Cor de fundo e texto */
         .dark-mode { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e2e8f0; }
         .light-mode { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #1a202c; }
+        /* Cores de Fundo de Card/Elemento */
+        .dark-mode .bg-white, .dark-mode .bg-gray-100 { background-color: #2a314b; }
+        .dark-mode .text-gray-900, .dark-mode .text-gray-700 { color: #e2e8f0; }
+        .dark-mode .border-gray-200, .dark-mode .border-gray-300 { border-color: #4a5568; }
+        /* Ajuste para inputs/selects no dark mode */
+        .dark-mode input, .dark-mode select, .dark-mode textarea { background-color: #3b425e; border-color: #4a5568; color: #e2e8f0; }
+        /* Estilização para o PDF gerado */
+        #pdfContent { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            color: #333; /* Força cor escura para impressão */
+        }
     </style>
 </head>
 <body class="min-h-screen transition-all duration-300 dark-mode">
-    
-    <header class="bg-gray-800 shadow-lg p-4 sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-white">SISTEMA DE CHAMADOS T.I</h1>
-                <p class="text-gray-300 text-sm">CNPJ: 54.677.769/0001-78</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <button id="themeToggle" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    🌙 Modo Claro
+    <header class="shadow-lg py-4 px-6 bg-white dark:bg-gray-800 fixed w-full z-10">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Sistema de Chamados T.I</h1>
+            <nav class="space-x-4 flex items-center">
+                <button id="authButton" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                    Login
                 </button>
-                <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Sair
+                <button id="themeToggle" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition duration-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
+                    ☀️ Modo Escuro
                 </button>
-            </div>
+            </nav>
         </div>
     </header>
 
-    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Acesso ao Sistema</h2>
-                <p class="text-gray-600 dark:text-gray-300">Entre com suas credenciais</p>
-            </div>
-            
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário (Email)</label>
-                    <input type="text" id="username" required 
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
-                    <input type="password" id="password" required 
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-                
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors">
+    <main id="appContent" class="pt-24 pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div id="loadingIndicator" class="text-center text-lg text-white dark:text-gray-200">Carregando...</div>
+    </main>
+
+    <footer class="text-center py-4 text-sm text-gray-200 dark:text-gray-400">
+        <p>&copy; 2024 Lucas Fragozo - Todos os direitos reservados.</p>
+    </footer>
+
+
+    <div id="loginModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Acesso ao Sistema</h3>
+            <form id="loginForm" class="space-y-4">
+                <input type="text" id="loginUsername" placeholder="Seu Usuário" required
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                <input type="password" id="loginPassword" placeholder="Sua Senha" required
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg transition-colors">
                     Entrar
                 </button>
             </form>
+            <p id="loginError" class="text-red-500 text-sm mt-3 text-center hidden">Erro de login. Tente novamente.</p>
         </div>
     </div>
-
-    <div id="adminDashboard" class="hidden">
-        <div class="max-w-7xl mx-auto p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Chamados Abertos</h3>
-                    <p id="openTicketsCount" class="text-3xl font-bold text-blue-600">0</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Chamados Encerrados</h3>
-                    <p id="closedTicketsCount" class="text-3xl font-bold text-green-600">0</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Total de Usuários</h3>
-                    <p id="usersCount" class="text-3xl font-bold text-purple-600">0</p>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Ações Administrativas</h3>
-                <div class="flex flex-wrap gap-4">
-                    <button id="createUserBtn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        + Criar Usuário (Cliente)
-                    </button>
-                    <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        📊 Gerar Relatório 30 Dias
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Gerenciar Chamados</h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Protocolo</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Solicitante</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Anexo</th> 
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data/Hora</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminTicketsList" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="clientDashboard" class="hidden">
-        <div class="max-w-4xl mx-auto p-6">
-            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg mb-8">
-                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
-                <button id="newTicketBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
-                    + Novo Chamado
-                </button>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Meus Chamados</h3>
-                </div>
-                <div id="clientTicketsList" class="p-6">
-                    <p class="text-gray-500 dark:text-gray-400">Nenhum chamado encontrado. Clique em "+ Novo Chamado" para começar.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="createUserModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Criar Novo Usuário Cliente</h3>
-            <form id="createUserForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome de Usuário</label>
-                    <input type="text" id="newUsername" required 
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
-                    <input type="email" id="newEmail" required 
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="ex: cliente@dominio.com">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
-                    <input type="password" id="newPassword" required 
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                </div>
-                
-                <div class="flex space-x-4">
-                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors">
-                        Criar
-                    </button>
-                    <button type="button" id="cancelCreateUser" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    
     <div id="newTicketModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-lg">
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Abrir Novo Chamado</h3>
             <form id="newTicketForm" class="space-y-4">
+                <input type="text" id="requesterName" placeholder="Seu Nome/Empresa" required
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                <textarea id="ticketDescription" rows="4" placeholder="Descreva o problema em detalhes..." required
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Seu Nome/Departamento</label>
-                    <input type="text" id="requesterName" required 
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: João - Financeiro">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição do Problema</label>
-                    <textarea id="ticketDescription" rows="4" required 
-                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Detalhe o máximo possível o erro ou solicitação."></textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anexar Arquivo (Opcional - Máx. 5MB)</label>
-                    <input type="file" id="ticketAttachment" 
-                               class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150"
-                               accept=".jpg, .jpeg, .png, .pdf, .doc, .docx">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anexo (Opcional)</label>
+                    <input type="file" id="ticketAttachment"
+                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-indigo-900 dark:file:text-indigo-300 dark:file:hover:bg-indigo-800">
                 </div>
                 <div class="flex space-x-4">
-                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
-                        Enviar Chamado
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg transition-colors">
+                        Abrir Chamado
                     </button>
                     <button type="button" id="cancelNewTicket" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
                         Cancelar
@@ -202,560 +95,623 @@
             </form>
         </div>
     </div>
-    
+
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">Será gerado um relatório consolidado com todos os chamados dos últimos 30 dias.</p>
-            <div class="flex space-x-4">
-                <button id="confirmGeneratePDF" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors">
-                    Confirmar e Gerar PDF
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório de Chamados</h3>
+            <div id="reportContent" class="text-gray-700 dark:text-gray-300 mb-4">
+                <p>O relatório será gerado em PDF com todos os chamados dos últimos 30 dias.</p>
+                <p class="mt-2 text-sm font-semibold">Os valores de cada chamado e o total serão incluídos.</p>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <button onclick="gerarRelatorioPDFLote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-colors">
+                    Gerar PDF (30 Dias)
                 </button>
-                <button id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
-                    Cancelar
+                <button type="button" onclick="document.getElementById('reportModal').classList.add('hidden')" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors">
+                    Fechar
                 </button>
             </div>
         </div>
     </div>
-
-
-    <footer class="bg-gray-800 text-white p-6 mt-12">
-        <div class="max-w-7xl mx-auto text-center">
-            <h4 class="text-lg font-semibold mb-4">Contatos para Suporte</h4>
-            <div class="flex flex-col md:flex-row justify-center items-center space-y-2 md:space-y-0 md:space-x-8">
-                <div class="flex items-center space-x-2">
-                    <span>📧</span>
-                    <a href="mailto:lfragozo563@gmail.com" class="hover:text-blue-400 transition-colors">lfragozo563@gmail.com</a>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <span>📱</span>
-                    <a href="tel:+5551993525004" class="hover:text-blue-400 transition-colors">51 99352-5004</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-<script>
-    // Configuração do Supabase
-    const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    // 🛑 IMPORTANTE: SUBSTITUA 'SUA_CHAVE_ANON_AQUI' PELA CHAVE ANON REAL DO SEU PROJETO
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; 
-
-    // Inicialização do Supabase
-    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); 
-
-    let currentUser = null;
     
-    // Referências do DOM
-    const loginScreen = document.getElementById('loginScreen');
-    const adminDashboard = document.getElementById('adminDashboard');
-    const clientDashboard = document.getElementById('clientDashboard');
-    const createUserModal = document.getElementById('createUserModal');
+    <div id="setServiceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Definir Serviço e Valor</h3>
+            <form id="setServiceForm" class="space-y-4">
+                <input type="hidden" id="serviceTicketId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Serviço Aplicado</label>
+                    <select id="serviceSelect" required
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                        <option value="">Selecione o Serviço Aplicado</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Final (R$)</label>
+                    <input type="number" step="0.01" id="serviceValueInput" required 
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="0.00">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Ajuste o valor aqui. Útil para custos de peça ou horas extras de serviço.
+                    </p>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors">
+                        Salvar Serviço e Valor
+                    </button>
+                    <button type="button" id="cancelSetService" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="pdfContainer" style="position: absolute; left: -9999px;">
+        <div id="pdfContent"></div>
+    </div>
+
+
+    <script>
+    // ------------------------------------------------------------------
+    // 1. CONFIGURAÇÃO SUPABASE
+    // ------------------------------------------------------------------
+    const SUPABASE_URL = 'https://ezdzvblxyddwxreyowyh.supabase.co'; // Substitua pela sua URL
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; // Substitua pela sua Chave Anon
+    
+    // Inicializa o cliente Supabase
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Variáveis de estado global
+    let currentUser = null;
+    let isAdmin = false;
+    let availableServices = []; // Armazena a lista de serviços
+
+    // ------------------------------------------------------------------
+    // 2. FUNÇÕES GERAIS DE UI
+    // ------------------------------------------------------------------
+    const appContent = document.getElementById('appContent');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const authButton = document.getElementById('authButton');
+    const themeToggle = document.getElementById('themeToggle');
+    const loginModal = document.getElementById('loginModal');
     const newTicketModal = document.getElementById('newTicketModal');
     const reportModal = document.getElementById('reportModal');
-    const generateReportBtn = document.getElementById('generateReportBtn');
-    const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
-    const themeToggle = document.getElementById('themeToggle');
+    
+    // Referências do DOM para o novo modal de serviço
+    const setServiceModal = document.getElementById('setServiceModal');
+    const serviceSelect = document.getElementById('serviceSelect');
+    const serviceValueInput = document.getElementById('serviceValueInput');
+    const serviceTicketId = document.getElementById('serviceTicketId');
 
-    // Função auxiliar para mostrar o dashboard correto
-    function showDashboard(role) {
-        loginScreen.classList.add('hidden');
-        adminDashboard.classList.add('hidden');
-        clientDashboard.classList.add('hidden');
-
-        if (role === 'admin') {
-            adminDashboard.classList.add('fade-in');
-            adminDashboard.classList.remove('hidden');
-            loadAdminDashboard();
-        } else if (role === 'client') {
-            clientDashboard.classList.add('fade-in');
-            clientDashboard.classList.remove('hidden');
-            loadClientDashboard();
+    function showLoading() { loadingIndicator.classList.remove('hidden'); appContent.innerHTML = ''; }
+    function hideLoading() { loadingIndicator.classList.add('hidden'); }
+    
+    function getStatusBadge(status) {
+        let color, text;
+        switch (status) {
+            case 'open': color = 'bg-red-500'; text = 'Aberto'; break;
+            case 'in_progress': color = 'bg-yellow-500'; text = 'Em Progresso'; break;
+            case 'closed': color = 'bg-green-500'; text = 'Fechado'; break;
+            default: color = 'bg-gray-500'; text = 'Desconhecido';
         }
-        document.body.scrollTop = document.documentElement.scrollTop = 0;
+        return `<span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${color} text-white">${text}</span>`;
+    }
+
+    function formatDateTime(timestamp) {
+        if (!timestamp) return 'N/A';
+        return new Date(timestamp).toLocaleString('pt-BR');
     }
     
+    function formatCurrency(value) {
+        if (value === null || typeof value === 'undefined') return 'R$ 0,00';
+        return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
+    }
+
     // ------------------------------------------------------------------
-    // 1. FUNÇÕES DE LOGIN E AUTENTICAÇÃO
+    // 3. FUNÇÕES DE AUTENTICAÇÃO
     // ------------------------------------------------------------------
+
+    // 3.1. Função para buscar a Role do usuário
+    async function getRole() {
+        if (!currentUser) return null;
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('role')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error) {
+            console.error("Erro ao buscar role:", error);
+            return null;
+        }
+        return data ? data.role : null;
+    }
+
+    // 3.2. Observador de Estado de Autenticação
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            currentUser = session.user;
+            getRole().then(role => {
+                isAdmin = role === 'admin';
+                authButton.textContent = 'Logout';
+                authButton.onclick = handleLogout;
+                renderApp();
+            });
+        } else {
+            currentUser = null;
+            isAdmin = false;
+            authButton.textContent = 'Login';
+            authButton.onclick = () => loginModal.classList.remove('hidden');
+            renderApp();
+        }
+    });
+
+    // 3.3. Função de Login
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        const email = document.getElementById('username').value; 
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDisplay = document.getElementById('loginError');
+        errorDisplay.classList.add('hidden');
 
-        // Tenta o LOGIN PADRÃO
-        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: email, 
+        showLoading();
+
+        // 1. Busca o e-mail/ID no `users` baseado no `username`
+        const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('id')
+            .eq('username', username)
+            .single();
+            
+        if (userError || !userData) {
+            hideLoading();
+            errorDisplay.textContent = 'Usuário não encontrado.';
+            errorDisplay.classList.remove('hidden');
+            return;
+        }
+
+        // 2. Tenta fazer login com o ID (email) e senha
+        const { error: authError } = await supabaseClient.auth.signInWithPassword({
+            email: username, // Assumindo que o username é o email de login real
             password: password,
         });
 
         if (authError) {
-            alert('Usuário ou senha incorretos! Verifique as credenciais e a chave API no código.');
-            console.error("Auth Error:", authError.message);
-            return;
-        }
-
-        // Busca o ROLE do usuário
-        const userId = authData.user.id;
-        await fetchUserRole(userId);
-    });
-
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', async function() {
-        await supabaseClient.auth.signOut();
-        currentUser = null;
-        loginScreen.classList.remove('hidden');
-        adminDashboard.classList.add('hidden');
-        clientDashboard.classList.add('hidden');
-        document.getElementById('loginForm').reset();
-        document.body.scrollTop = document.documentElement.scrollTop = 0;
-    });
-    
-    // Busca o ROLE e redireciona (Reutilizável para login e verificação de sessão)
-    async function fetchUserRole(userId) {
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('role, username')
-            .eq('id', userId)
-            .single();
-        
-        if (userError || !userData) {
-            alert('Perfil de usuário (role) não encontrado. Verifique a vinculação do UUID na sua tabela "users".');
-            await supabaseClient.auth.signOut();
-            return;
-        }
-
-        const session = (await supabaseClient.auth.getSession()).data.session;
-        currentUser = session.user; // Obtém o objeto user completo
-        currentUser.user_metadata = { role: userData.role, username: userData.username };
-        showDashboard(userData.role);
-    }
-    
-    // Verifica a sessão ao carregar a página
-    async function checkSession() {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (session) {
-            currentUser = session.user;
-            await fetchUserRole(currentUser.id);
+            hideLoading();
+            console.error("Erro de login:", authError);
+            errorDisplay.textContent = 'Credenciais inválidas.';
+            errorDisplay.classList.remove('hidden');
         } else {
-            loginScreen.classList.remove('hidden');
+            loginModal.classList.add('hidden');
+            // O onAuthStateChange fará o resto
         }
-    }
-    
-    // ------------------------------------------------------------------
-    // 2. FUNÇÕES DE DASHBOARD E CARREGAMENTO
-    // ------------------------------------------------------------------
-    async function loadAdminDashboard() {
-        await loadAdminTickets();
-        const { count: openCount } = await supabaseClient.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'open');
-        const { count: closedCount } = await supabaseClient.from('tickets').select('*', { count: 'exact', head: true }).eq('status', 'closed');
-        const { count: usersCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true }).eq('role', 'client');
-        
-        document.getElementById('openTicketsCount').textContent = openCount || 0; 
-        document.getElementById('closedTicketsCount').textContent = closedCount || 0;
-        document.getElementById('usersCount').textContent = usersCount || 0;
-    }
+    });
 
-    async function loadClientDashboard() {
-        loadClientTickets();
-        // Preenche o campo de solicitante automaticamente
-        if (currentUser && currentUser.user_metadata.username) {
-             document.getElementById('requesterName').value = currentUser.user_metadata.username;
-        }
-    }
-    
-    // Carregamento de tickets do Admin
-    async function loadAdminTickets() {
-        const { data: tickets, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .order('created_at', { ascending: false });
-
+    // 3.4. Função de Logout
+    async function handleLogout() {
+        const { error } = await supabaseClient.auth.signOut();
         if (error) {
-            console.error('Erro ao carregar chamados:', error);
-            return;
+            console.error("Erro ao fazer logout:", error);
         }
-
-        const tbody = document.getElementById('adminTicketsList');
-        tbody.innerHTML = '';
-        
-        const getStatusBadge = (status) => {
-            switch(status) {
-                case 'open': return '<span class="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">Aberto</span>';
-                case 'in_progress': return '<span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">Em Progresso</span>';
-                case 'closed': return '<span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">Encerrado</span>';
-                default: return '';
-            }
-        };
-
-        tickets.forEach(ticket => {
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
-            const statusBadge = getStatusBadge(ticket.status);
-            
-            let actions = '';
-            // Os IDs precisam de aspas simples ('${ticket.id}') no onclick, pois são strings (UUIDs)
-
-            if (ticket.status === 'open') {
-                actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
-            }
-
-            if (ticket.status === 'open' || ticket.status === 'in_progress') {
-                actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
-            }
-            
-            // Botão PDF Individual (mantido para compatibilidade)
-            actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
-
-            actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
-            
-            // Lógica para exibir o link de anexo
-            const attachmentLink = ticket.attachment_url 
-                ? `<a href="${ticket.attachment_url}" target="_blank" class="text-blue-500 hover:text-blue-700 transition-colors">🔗 Ver Anexo</a>`
-                : 'N/A';
-
-            row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester}</td>
-                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">${attachmentLink}</td>
-                <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(ticket.status)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${new Date(ticket.created_at).toLocaleString('pt-BR')}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
-            `;
-            
-            tbody.appendChild(row);
-        });
     }
 
-    // Carregamento de tickets do Cliente (Implementação básica)
-    async function loadClientTickets() {
-        if (!currentUser || !currentUser.id) return;
+    // ------------------------------------------------------------------
+    // 4. LÓGICA DO CLIENTE
+    // ------------------------------------------------------------------
 
-        const { data: tickets, error } = await supabaseClient
+    // 4.1. Renderiza o Dashboard do Cliente
+    async function loadClientDashboard() {
+        showLoading();
+        // MUDANÇA: Adiciona o service_value para o cliente ver o valor
+        const userTickets = await fetchUserTickets(`
+            id, protocol, requester, description, status, created_at, closed_at, service_value,
+            ticket_attachments(attachment_url)
+        `);
+
+        let html = `
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-semibold text-white dark:text-gray-200">Meus Chamados</h2>
+                <button id="openNewTicketModal" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                    + Abrir Novo Chamado
+                </button>
+            </div>
+            ${userTickets.length === 0 ? 
+                '<p class="text-center text-xl text-white dark:text-gray-300">Você não tem chamados abertos.</p>' : 
+                `<div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Protocolo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aberto Em</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Descrição</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Anexo</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            ${userTickets.map(ticket => `
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(ticket.status)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${formatDateTime(ticket.created_at)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">${formatCurrency(ticket.service_value)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">${ticket.description}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold">Ver Anexo</a>` : 'Nenhum'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>`}
+        `;
+
+        appContent.innerHTML = html;
+        hideLoading();
+        
+        document.getElementById('openNewTicketModal').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
+    }
+
+    // 4.2. Busca Tickets do Usuário (Função reutilizada)
+    async function fetchUserTickets(selectFields) {
+        const { data, error } = await supabaseClient
             .from('tickets')
-            .select('*')
+            .select(selectFields)
             .eq('user_id', currentUser.id)
             .order('created_at', { ascending: false });
 
         if (error) {
-            console.error('Erro ao carregar seus chamados:', error);
-            return;
+            console.error("Erro ao buscar tickets:", error);
+            return [];
         }
 
-        const listDiv = document.getElementById('clientTicketsList');
-        listDiv.innerHTML = '';
-        
-        if (tickets.length === 0) {
-            listDiv.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Você não tem chamados abertos ou históricos.</p>';
-            return;
-        }
-
-        // Lógica de exibição simples para o cliente
-        tickets.forEach(ticket => {
-             const statusColor = ticket.status === 'closed' ? 'bg-green-100 text-green-800' : (ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800');
-             
-             const attachmentHtml = ticket.attachment_url 
-                 ? `<a href="${ticket.attachment_url}" target="_blank" class="text-sm text-blue-500 hover:underline">Ver Anexo</a>`
-                 : '';
-
-             listDiv.innerHTML += `
-                 <div class="p-4 mb-4 border rounded-lg shadow dark:bg-gray-700 dark:border-gray-600">
-                     <div class="flex justify-between items-center mb-2">
-                         <h4 class="font-bold text-gray-900 dark:text-white">Protocolo: ${ticket.protocol}</h4>
-                         <span class="px-2 py-1 text-xs font-semibold ${statusColor} rounded-full">${ticket.status.toUpperCase().replace('_', ' ')}</span>
-                     </div>
-                     <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
-                     <div class="flex justify-between items-center text-xs text-gray-400">
-                         <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
-                         ${attachmentHtml} 
-                     </div>
-                 </div>
-             `;
-        });
+        return data.map(ticket => ({
+            ...ticket,
+            attachment_url: ticket.ticket_attachments.length > 0 ? ticket.ticket_attachments[0].attachment_url : null
+        }));
     }
 
-
-    // Funções de Ação do Ticket (startTicket, closeTicket, deleteTicket)
-    async function startTicket(ticketId) {
-        if (!confirm('Iniciar este chamado?')) return;
-        const { error } = await supabaseClient
-            .from('tickets')
-            .update({ status: 'in_progress' })
-            .eq('id', ticketId);
-
-        if (error) {
-            alert('Erro ao iniciar chamado!');
-        } else {
-            alert('Chamado iniciado!');
-            loadAdminDashboard();
-        }
-    }
-
-    async function closeTicket(ticketId) {
-        if (!confirm('Encerrar este chamado?')) return;
-        const { error } = await supabaseClient
-            .from('tickets')
-            .update({ status: 'closed', closed_at: new Date().toISOString() })
-            .eq('id', ticketId);
-
-        if (error) {
-            alert('Erro ao fechar chamado!');
-        } else {
-            alert('Chamado encerrado com sucesso!');
-            loadAdminDashboard();
-        }
-    }
-
-    async function deleteTicket(ticketId) {
-        if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
-        
-        // 🛑 Lógica para deletar o arquivo anexo no Storage (deixada para futura implementação)
-        
-        const { error } = await supabaseClient
-            .from('tickets')
-            .delete()
-            .eq('id', ticketId);
-
-        if (error) {
-            alert('Erro ao excluir chamado!');
-        } else {
-            alert('Chamado excluído com sucesso!');
-            loadAdminDashboard();
-        }
-    }
-    
-    // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
-    window.startTicket = startTicket;
-    window.closeTicket = closeTicket;
-    window.deleteTicket = deleteTicket;
-
-    // ------------------------------------------------------------------
-    // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
-    // ------------------------------------------------------------------
-
-    // FUNÇÃO CRIAR USUÁRIO 
-    document.getElementById('createUserForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const newUsername = document.getElementById('newUsername').value;
-        const newEmail = document.getElementById('newEmail').value; 
-        const newPassword = document.getElementById('newPassword').value;
-
-        // 1. Criar o Usuário no Supabase AUTH
-        const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-            email: newEmail,
-            password: newPassword,
-        });
-
-        if (authError) {
-            alert(`Erro ao criar conta: ${authError.message}`);
-            return;
-        }
-
-        // 2. Inserir o Perfil (Role) na Tabela 'users'
-        const newUserId = authData.user.id;
-        
-        const { error: userInsertError } = await supabaseClient
-            .from('users')
-            .insert({
-                id: newUserId,
-                username: newUsername,
-                role: 'client' // Define o papel como cliente
-            });
-
-        if (userInsertError) {
-            alert(`Conta criada, mas erro ao definir o perfil (role): ${userInsertError.message}. Limpe o usuário manualmente no Supabase Auth.`);
-            return;
-        }
-
-        alert(`Usuário cliente "${newUsername}" criado com sucesso! Email de ativação enviado.`);
-
-        document.getElementById('createUserModal').classList.add('hidden');
-        document.getElementById('createUserForm').reset();
-        loadAdminDashboard(); // Atualiza a contagem de usuários
-    });
-
-    // FUNÇÃO ABRIR NOVO CHAMADO (ATUALIZADA PARA UPLOAD)
+    // 4.3. Lógica de Novo Chamado (SIMPLIFICADA)
     document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        const requester = document.getElementById('requesterName').value.trim();
+        const description = document.getElementById('ticketDescription').value.trim();
+        const attachmentFile = document.getElementById('ticketAttachment').files[0];
 
-        if (!currentUser || !currentUser.id) {
-            alert('Você precisa estar logado para abrir um chamado.');
+        const ticketData = {
+            requester: requester,
+            description: description,
+            user_id: currentUser.id,
+            protocol: `TICKET-${Date.now()}` 
+            // service_id e service_value são definidos pelo Admin
+        };
+
+        // 1. Insere o ticket no BD
+        const { data: insertedTicket, error: ticketError } = await supabaseClient
+            .from('tickets')
+            .insert(ticketData)
+            .select()
+            .single();
+
+        if (ticketError) {
+            alert('Erro ao abrir chamado: ' + ticketError.message);
+            console.error("Erro ao inserir ticket:", ticketError);
             return;
         }
 
-        const requesterName = document.getElementById('requesterName').value;
-        const description = document.getElementById('ticketDescription').value;
-        const attachmentInput = document.getElementById('ticketAttachment');
-        const file = attachmentInput.files[0];
-        
-        let attachmentUrl = null;
-        const protocol = 'TICKET-' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
+        // 2. Lógica de Upload de Anexo (se houver)
+        if (attachmentFile) {
+            const filePath = `${currentUser.id}/${insertedTicket.protocol}/${attachmentFile.name}`;
+            const { error: uploadError } = await supabaseClient.storage
+                .from('ticket_attachments')
+                .upload(filePath, attachmentFile, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
 
-        // 1. UPLOAD DO ARQUIVO PARA O SUPABASE STORAGE (SE HOUVER ARQUIVO)
-        if (file) {
-            // Gera um caminho único: client_user_id/protocolo-timestamp.ext
-            const fileExt = file.name.split('.').pop();
-            const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
-            const bucketName = 'ticket_attachments'; 
-            
-            try {
-                const { error: uploadError } = await supabaseClient.storage
-                    .from(bucketName)
-                    .upload(filePath, file, {
-                        cacheControl: '3600',
-                        upsert: false 
-                    });
-                    
-                if (uploadError) {
-                    throw uploadError;
-                }
-                
-                // 2. Obtém a URL pública do arquivo
-                const { data: publicUrlData } = supabaseClient.storage
-                    .from(bucketName)
+            if (uploadError) {
+                alert('Chamado criado, mas erro ao fazer upload do anexo: ' + uploadError.message);
+                console.error("Erro ao fazer upload:", uploadError);
+            } else {
+                // 3. Salva a URL do anexo no BD (tabela `ticket_attachments`)
+                const { data: urlData } = supabaseClient.storage
+                    .from('ticket_attachments')
                     .getPublicUrl(filePath);
-                
-                attachmentUrl = publicUrlData.publicUrl;
-                
-            } catch (uploadError) {
-                alert(`Erro ao fazer upload do arquivo: ${uploadError.message}. Verifique o Supabase Storage e as políticas de RLS.`);
-                console.error('Erro de Upload:', uploadError);
-                return; 
+
+                const { error: attachError } = await supabaseClient
+                    .from('ticket_attachments')
+                    .insert({
+                        ticket_id: insertedTicket.id,
+                        attachment_url: urlData.publicUrl,
+                        uploaded_by: currentUser.id
+                    });
+
+                if (attachError) {
+                    console.error("Erro ao salvar URL do anexo:", attachError);
+                }
             }
         }
 
-        // 3. INSERÇÃO DO NOVO CHAMADO NO BANCO DE DADOS
-        const { error: insertError } = await supabaseClient
-            .from('tickets')
-            .insert({
-                protocol: protocol,
-                requester: requesterName,
-                description: description,
-                attachment_url: attachmentUrl, // Insere a URL ou NULL
-                user_id: currentUser.id,
-                status: 'open'
-            });
+        // Sucesso
+        newTicketModal.classList.add('hidden');
+        document.getElementById('newTicketForm').reset();
+        alert('Chamado aberto com sucesso! Protocolo: ' + insertedTicket.protocol);
+        loadClientDashboard(); // Recarrega a lista
+    });
+    
+    document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
 
-        if (insertError) {
-            alert(`Erro ao abrir chamado: ${insertError.message}`);
-            // Se falhar a inserção, você deve tentar deletar o arquivo do storage
+    // ------------------------------------------------------------------
+    // 5. LÓGICA DO ADMIN
+    // ------------------------------------------------------------------
+
+    // 5.1. Função para carregar a lista de serviços
+    async function fetchAvailableServices() {
+        if (availableServices.length > 0) return; 
+        const { data, error } = await supabaseClient
+            .from('services')
+            .select('id, service_name, price') // Seleciona ID e Price
+            .order('id', { ascending: true });
+
+        if (error) {
+            console.error('Erro ao carregar lista de serviços:', error);
+            return;
+        }
+        availableServices = data;
+    }
+    
+    // 5.2. Função para mostrar o modal de serviço
+    window.showSetServiceModal = function(ticketId) {
+        const currentTicket = allTickets.find(t => t.id == ticketId);
+        
+        serviceTicketId.value = ticketId;
+        // Preenche o valor e o service_id atual do ticket no modal (se já existirem)
+        serviceValueInput.value = currentTicket.service_value ? parseFloat(currentTicket.service_value).toFixed(2) : '';
+
+        // Preenche o <select> com os serviços disponíveis
+        serviceSelect.innerHTML = '<option value="">Selecione o Serviço Aplicado</option>';
+        availableServices.forEach(service => {
+            const option = document.createElement('option');
+            // MUDANÇA CRÍTICA: O value agora salva o ID e o preço, separados por '|'
+            option.value = `${service.id}|${service.price}`; 
+            option.textContent = `${service.service_name} (Base: ${formatCurrency(service.price)})`;
+            
+            // Pré-seleciona o serviço se ele já tiver sido definido
+            if (currentTicket.service_id === service.id) {
+                option.selected = true;
+            }
+            
+            serviceSelect.appendChild(option);
+        });
+        
+        setServiceModal.classList.remove('hidden');
+    }
+
+    // Preenche o input de valor ao selecionar o serviço
+    serviceSelect.addEventListener('change', function() {
+        const selectedValue = this.value; // Recebe "ID|Preço"
+        if (selectedValue) {
+            const price = selectedValue.split('|')[1];
+            serviceValueInput.value = parseFloat(price).toFixed(2);
+        } else {
+            serviceValueInput.value = '';
+        }
+    });
+
+    // Lógica de submissão do formulário de serviço
+    document.getElementById('setServiceForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const ticketId = serviceTicketId.value;
+        const selectedValue = serviceSelect.value; // Recebe "ID|Preço"
+        const serviceId = parseInt(selectedValue.split('|')[0]); // Pega o ID
+        const value = parseFloat(serviceValueInput.value);
+
+        if (isNaN(value) || value < 0) {
+            alert('O valor do serviço não pode ser negativo.');
             return;
         }
 
-        alert(`Chamado aberto com sucesso! Protocolo: ${protocol}`);
+        const updateData = { 
+            service_value: value,
+            service_id: serviceId // Salva o ID do serviço para futura referência
+        };
 
-        document.getElementById('newTicketModal').classList.add('hidden');
-        document.getElementById('newTicketForm').reset();
-        loadClientDashboard(); // Atualiza a lista de chamados do cliente
+        const { error } = await supabaseClient
+            .from('tickets')
+            .update(updateData)
+            .eq('id', ticketId);
+
+        if (error) {
+            alert('Erro ao salvar o serviço e valor!');
+            console.error('Erro ao salvar serviço:', error);
+        } else {
+            alert('Serviço e Valor salvos com sucesso!');
+            setServiceModal.classList.add('hidden');
+            loadAdminDashboard(); // Recarrega o painel admin
+        }
     });
 
-    // Funções de controle dos modais
-    document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
-    document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
-    document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
-    document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
-    
-    // Funções de controle do modal de relatório
-    generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
-    cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
-    confirmGeneratePDF.addEventListener('click', gerarRelatorioPDFLote);
+    document.getElementById('cancelSetService').addEventListener('click', () => setServiceModal.classList.add('hidden'));
 
 
-    // ------------------------------------------------------------------
-    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E MELHORADAS)
-    // ------------------------------------------------------------------
+    // 5.3. Renderiza o Dashboard do Admin (MUDANÇA CRÍTICA AQUI)
+    let allTickets = [];
 
-    // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de lote)
-    async function buscarTicketsUltimos30Dias() {
-        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    async function loadAdminDashboard() {
+        showLoading();
+        await fetchAvailableServices(); 
 
-        const { data: tickets, error } = await supabaseClient
+        // MUDANÇA CRÍTICA: Inclui service_name na consulta
+        const { data, error } = await supabaseClient
             .from('tickets')
-            .select('*')
-            .gte('created_at', trintaDiasAtras) // Filtra por data
+            .select(`
+                *, 
+                users!inner(username), 
+                ticket_attachments(attachment_url),
+                services(service_name)
+            `)
             .order('created_at', { ascending: false });
 
         if (error) {
-            alert('Erro ao buscar tickets para o relatório: ' + error.message);
-            return null;
-        }
-        return tickets;
-    }
-    
-    // Geração de PDF Individual (Mantida por compatibilidade)
-    async function generateTicketPDF(ticketId) {
-        const { data: ticket, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .eq('id', ticketId)
-            .single();
-
-        if (error || !ticket) {
-            alert('Erro ao buscar detalhes do chamado.');
+            console.error("Erro ao buscar tickets admin:", error);
+            appContent.innerHTML = `<p class="text-red-400">Erro ao carregar o painel administrativo.</p>`;
+            hideLoading();
             return;
         }
-        
-        const statusText = ticket.status.toUpperCase().replace('_', ' ');
-        const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
 
-        const content = document.createElement('div');
-        content.style.padding = '20px';
-        content.style.fontFamily = 'Arial, sans-serif';
-        content.innerHTML = `
-            <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
-                <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;">Protocolo: ${ticket.protocol}</p>
+        allTickets = data.map(ticket => ({
+            ...ticket,
+            requester_username: ticket.users.username,
+            attachment_url: ticket.ticket_attachments.length > 0 ? ticket.ticket_attachments[0].attachment_url : null,
+            // NOVO: Extrai o nome do serviço para exibição
+            service_name: ticket.services ? ticket.services.service_name : null 
+        }));
+
+        let html = `
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-semibold text-white dark:text-gray-200">Painel Administrativo</h2>
+                <button onclick="document.getElementById('reportModal').classList.remove('hidden')" 
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                    Gerar Relatório (30 Dias)
+                </button>
             </div>
-            <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-            <p><strong>Aberto em:</strong> ${dateCreated}</p>
-            <p><strong>Status:</strong> ${statusText}</p>
-            <p><strong>Descrição:</strong></p>
-            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9;">
-                ${ticket.description.replace(/\n/g, '<br>')}
-            </div>
-            <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
-            <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px dashed #ccc;">
-                <p>Assinatura do Responsável T.I:</p>
-                <div style="width: 200px; height: 1px; border-top: 1px solid #000; margin: 10px auto;"></div>
-            </div>
+            ${allTickets.length === 0 ? 
+                '<p class="text-center text-xl text-white dark:text-gray-300">Nenhum chamado registrado.</p>' : 
+                `<div class="bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Protocolo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aberto Por</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Serviço Aplicado</th> <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            ${allTickets.map(ticket => {
+                                const attachmentLink = ticket.attachment_url ? 
+                                    `<a href="${ticket.attachment_url}" target="_blank" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold">Ver Anexo</a>` : 
+                                    'Nenhum';
+                                    
+                                const serviceValue = formatCurrency(ticket.service_value);
+                                
+                                // NOVO: Exibe o nome do serviço ou 'A Definir'
+                                const serviceNameDisplay = ticket.service_name 
+                                    ? ticket.service_name 
+                                    : `<span class="text-red-500">A Definir</span>`; 
+                                
+                                let actions = `<button onclick="showSetServiceModal('${ticket.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm mr-2 mb-1">Definir</button>`; 
+                                
+                                if (ticket.status === 'open') {
+                                    actions += `<button onclick="updateTicketStatus('${ticket.id}', 'in_progress')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2 mb-1">Progresso</button>`;
+                                } else if (ticket.status === 'in_progress') {
+                                    actions += `<button onclick="updateTicketStatus('${ticket.id}', 'closed')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2 mb-1">Fechar</button>`;
+                                } else if (ticket.status === 'closed') {
+                                    actions += `<button onclick="updateTicketStatus('${ticket.id}', 'open')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm mr-2 mb-1">Reabrir</button>`;
+                                }
+                                
+                                return `
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester_username} (${ticket.requester})</td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${serviceNameDisplay}</td> <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">${serviceValue}</td> 
+                                        <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(ticket.status)}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>`}
         `;
 
-        const options = {
-            margin: 10,
-            filename: `${ticket.protocol}.pdf`,
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().from(content).set(options).save();
+        appContent.innerHTML = html;
+        hideLoading();
     }
-    window.generateTicketPDF = generateTicketPDF;
+    
+    // 5.4. Função para atualizar o status do ticket
+    window.updateTicketStatus = async function(ticketId, newStatus) {
+        if (!confirm(`Tem certeza que deseja mudar o status para ${newStatus}?`)) return;
+
+        const updateData = { status: newStatus };
+        if (newStatus === 'closed') {
+            updateData.closed_at = new Date().toISOString();
+        } else if (newStatus === 'open') {
+             updateData.closed_at = null; 
+        }
+
+        const { error } = await supabaseClient
+            .from('tickets')
+            .update(updateData)
+            .eq('id', ticketId);
+
+        if (error) {
+            alert('Erro ao atualizar status!');
+            console.error('Erro ao atualizar status:', error);
+        } else {
+            alert(`Status do chamado ${ticketId} atualizado para ${newStatus}.`);
+            loadAdminDashboard();
+        }
+    }
 
 
-    // FUNÇÃO DE GERAÇÃO EM LOTE - CORRIGIDA COM MELHOR CSS, CNPJ E ASSINATURAS
-    async function gerarRelatorioPDFLote() {
+    // ------------------------------------------------------------------
+    // 6. GERAÇÃO DE RELATÓRIO PDF EM LOTE
+    // ------------------------------------------------------------------
+
+    // 6.1. Busca os tickets dos últimos 30 dias (MODIFICADO para incluir service_name)
+    async function buscarTicketsUltimos30Dias() {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        
+        const { data, error } = await supabaseClient
+            .from('tickets')
+            .select(`
+                *, 
+                users!inner(username), 
+                services(service_name)
+            `)
+            .gte('created_at', thirtyDaysAgo.toISOString()) 
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Erro ao buscar tickets para relatório:", error);
+            alert('Erro ao buscar dados para o relatório.');
+            return null;
+        }
+
+        return data.map(ticket => ({
+            ...ticket,
+            requester_username: ticket.users.username,
+            service_name: ticket.services ? ticket.services.service_name : 'Serviço Não Definido'
+        }));
+    }
+
+    // 6.2. Função principal de geração do PDF
+    window.gerarRelatorioPDFLote = async function() {
         reportModal.classList.add('hidden');
         
         const tickets = await buscarTicketsUltimos30Dias();
 
-        if (!tickets) {
-            return;
-        }
-
-        if (tickets.length === 0) {
+        if (!tickets || tickets.length === 0) {
             alert('Nenhum chamado encontrado nos últimos 30 dias para gerar o relatório.');
             return;
         }
-        
-        // 1. Cria o conteúdo HTML do relatório consolidado com o novo CSS e CNPJ
-        const content = document.createElement('div');
-        content.style.padding = '20px';
-        content.style.fontFamily = 'Arial, sans-serif';
-        content.style.color = '#1f2937'; // Texto escuro para melhor contraste
-        
+
+        const totalValue = tickets.reduce((sum, ticket) => {
+            const value = parseFloat(ticket.service_value || 0);
+            return sum + value;
+        }, 0);
+        const totalValueFormatted = formatCurrency(totalValue);
+
+        const content = document.getElementById('pdfContent');
+        content.innerHTML = ''; 
+
+        // 1. Cria o cabeçalho do relatório com o total
         content.innerHTML = `
             <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
                 <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO CONSOLIDADO DE CHAMADOS</h1>
@@ -765,56 +721,51 @@
             <h2 style="text-align: center; font-size: 1.2em; margin-top: 5px; color: #4b5563;">
                 Últimos 30 Dias (Total: ${tickets.length} Chamados)
             </h2>
+            <h3 style="text-align: center; font-size: 1.4em; color: #10b981; margin: 15px 0; padding: 10px; background-color: #e0f7fa; border-radius: 5px;">
+                VALOR TOTAL CONSOLIDADO: ${totalValueFormatted}
+            </h3>
             <p style="text-align: right; font-size: 0.8em; color: #6b7280;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
         `;
-        
-        // 2. Itera sobre os tickets e adiciona ao conteúdo com CSS melhorado
+
+        // 2. Itera sobre os tickets e adiciona ao conteúdo
         tickets.forEach((ticket, index) => {
-            const statusColor = ticket.status === 'closed' ? '#10b981' : (ticket.status === 'open' ? '#f59e0b' : '#3b82f6');
-            const statusText = ticket.status.toUpperCase().replace('_', ' ');
-            const ticketDescription = ticket.description ? ticket.description.substring(0, 150) + (ticket.description.length > 150 ? '...' : '') : 'N/A';
-            const requesterName = ticket.requester || 'N/A';
-            const createdAtDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : 'N/A';
+            const createdAtDate = formatDateTime(ticket.created_at);
+            const requesterName = ticket.requester_username; 
+            const ticketDescription = ticket.description.length > 100 ? ticket.description.substring(0, 100) + '...' : ticket.description;
+            
+            let statusColor;
+            let statusText;
+            switch (ticket.status) {
+                case 'open': statusColor = '#ef4444'; statusText = 'Aberto'; break;
+                case 'in_progress': statusColor = '#f59e0b'; statusText = 'Em Progresso'; break;
+                case 'closed': statusColor = '#10b981'; statusText = 'Fechado'; break;
+                default: statusColor = '#6b7280'; statusText = 'Desconhecido';
+            }
+            
+            const ticketValueFormatted = formatCurrency(ticket.service_value);
 
             const ticketHtml = `
-                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <p style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
+                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); page-break-inside: avoid;">
+                    <p style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0; border-bottom: 1px dotted #e5e7eb; padding-bottom: 5px;">
                         ${index + 1}. Protocolo: ${ticket.protocol} 
                         <span style="float: right; font-weight: normal; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${statusText}</span>
                     </p>
                     <div style="font-size: 0.9em; line-height: 1.5;">
-                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
+                        <p style="margin: 2px 0;"><strong>Serviço Aplicado:</strong> ${ticket.service_name}</p>
+                        <p style="margin: 2px 0;"><strong>Valor:</strong> <span style="font-weight: bold; color: #059669;">${ticketValueFormatted}</span></p>
+                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName} (${ticket.requester})</p>
                         <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
                         <p style="margin: 2px 0;"><strong>Descrição:</strong> ${ticketDescription}</p>
-                        <p style="margin: 2px 0; color: ${ticket.attachment_url ? '#3b82f6' : '#6b7280'};"><strong>Anexo:</strong> ${ticket.attachment_url ? 'Sim (Verificado)' : 'Não'}</p>
                     </div>
                 </div>
             `;
             content.innerHTML += ticketHtml;
         });
 
-        // 3. Adiciona a seção de rodapé e assinatura
+        // 3. Rodapé
         content.innerHTML += `
-            <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
-                <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
-                    Este relatório consolida a atividade de chamados de T.I. no período.
-                </p>
-                
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 50%; text-align: center; padding: 0 10px;">
-                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
-                        </td>
-                        <td style="width: 50%; text-align: center; padding: 0 10px;">
-                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
-                        </td>
-                    </tr>
-                </table>
-                <div style="text-align: center; margin-top: 30px; font-size: 0.75em; color: #9ca3af;">
-                    <p>Documento gerado eletronicamente.</p>
-                </div>
+            <div style="text-align: center; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 10px; font-size: 0.8em; color: #6b7280;">
+                Documento gerado automaticamente pelo Sistema de Chamados T.I.
             </div>
         `;
 
@@ -830,30 +781,53 @@
         html2pdf().from(content).set(options).save();
         alert('Relatório consolidado gerado com sucesso!');
     }
+
+
+    // ------------------------------------------------------------------
+    // 7. FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO E TEMA
+    // ------------------------------------------------------------------
     
-    // TORNA A FUNÇÃO DE GERAÇÃO EM LOTE GLOBA L
-    window.gerarRelatorioPDFLote = gerarRelatorioPDFLote;
+    function renderApp() {
+        if (currentUser) {
+            loginModal.classList.add('hidden');
+            if (isAdmin) {
+                loadAdminDashboard();
+            } else {
+                loadClientDashboard();
+            }
+        } else {
+            // Tela inicial sem login
+            appContent.innerHTML = `
+                <div class="text-center py-20 fade-in">
+                    <h2 class="text-4xl font-extrabold text-white dark:text-gray-200 mb-4">Bem-vindo(a) ao Sistema de Chamados</h2>
+                    <p class="text-xl text-white dark:text-gray-300 mb-8">Faça login para abrir ou gerenciar seus chamados.</p>
+                    <button onclick="document.getElementById('loginModal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 text-lg rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+                        Acessar Agora
+                    </button>
+                </div>
+            `;
+            hideLoading();
+        }
+    }
 
-
-    // ------------------------------------------------------------------
-    // 5. FUNÇÃO DE ALTERNAR TEMA
-    // ------------------------------------------------------------------
+    // Função de Alternar Tema (já existente)
     themeToggle.addEventListener('click', () => {
         const isDarkMode = document.body.classList.contains('dark-mode');
         if (isDarkMode) {
             document.body.classList.remove('dark-mode');
             document.body.classList.add('light-mode');
-            themeToggle.textContent = '☀️ Modo Escuro';
+            themeToggle.textContent = '🌙 Modo Claro';
         } else {
             document.body.classList.remove('light-mode');
             document.body.classList.add('dark-mode');
-            themeToggle.textContent = '🌙 Modo Claro';
+            themeToggle.textContent = '☀️ Modo Escuro';
         }
     });
 
-    // Inicia a verificação de sessão ao carregar a página
-    checkSession();
-</script>
 
+    // Inicialização da aplicação
+    supabaseClient.auth.getSession();
+    
+    </script>
 </body>
 </html>
