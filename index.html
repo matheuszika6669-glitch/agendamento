@@ -88,9 +88,6 @@
                     <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
                         📊 Gerar Relatório 30 Dias
                     </button>
-                    <button id="addServiceBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        ➕ Adicionar Serviço
-                    </button>
                 </div>
             </div>
 
@@ -206,34 +203,33 @@
         </div>
     </div>
     
-    <div id="addServiceModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div id="closeTicketModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Adicionar Novo Serviço</h3>
-            <form id="addServiceForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do Serviço</label>
-                    <input type="text" id="serviceName" required 
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: Manutenção em Servidor">
-                </div>
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Encerrar Chamado</h3>
+            <form id="closeTicketForm" class="space-y-4">
+                <input type="hidden" id="currentTicketId">
+
+                <p class="text-gray-700 dark:text-gray-300">Você está prestes a encerrar o chamado **Protocolo: <span id="closingProtocol" class="font-bold"></span>**.</p>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor (R$)</label>
-                    <input type="number" step="0.01" id="serviceValue" required 
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 250.00">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Descrição do Serviço Realizado e Valor Cobrado (Para o PDF)
+                    </label>
+                    <textarea id="serviceDetails" rows="5" placeholder="Ex: Formatação completa: R$ 150,00 | Suporte remoto (2h): R$ 100,00" required 
+                                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
                 </div>
                 
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition-colors">
-                        Salvar Serviço
+                        Confirmar Encerramento
                     </button>
-                    <button type="button" id="cancelAddService" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
+                    <button type="button" id="cancelCloseTicket" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
                         Cancelar
                     </button>
                 </div>
             </form>
         </div>
     </div>
-
 
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
@@ -284,7 +280,7 @@
     const clientDashboard = document.getElementById('clientDashboard');
     const createUserModal = document.getElementById('createUserModal');
     const newTicketModal = document.getElementById('newTicketModal');
-    const addServiceModal = document.getElementById('addServiceModal'); // NOVO MODAL
+    const closeTicketModal = document.getElementById('closeTicketModal'); // NOVO MODAL
     const reportModal = document.getElementById('reportModal');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
@@ -446,9 +442,10 @@
             if (ticket.status === 'open') {
                 actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
             }
-
+            
+            // Alterado para abrir o modal de encerramento em vez de fechar direto
             if (ticket.status === 'open' || ticket.status === 'in_progress') {
-                actions += `<button onclick="closeTicket('${ticket.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
+                actions += `<button onclick="openCloseTicketModal('${ticket.id}', '${ticket.protocol}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
             
             // Botão PDF Individual (mantido para compatibilidade)
@@ -523,7 +520,7 @@
     }
 
 
-    // Funções de Ação do Ticket (startTicket, closeTicket, deleteTicket)
+    // Funções de Ação do Ticket
     async function startTicket(ticketId) {
         if (!confirm('Iniciar este chamado?')) return;
         const { error } = await supabaseClient
@@ -538,21 +535,41 @@
             loadAdminDashboard();
         }
     }
-
-    async function closeTicket(ticketId) {
-        if (!confirm('Encerrar este chamado?')) return;
+    
+    // Função para abrir o modal de encerramento
+    function openCloseTicketModal(ticketId, protocol) {
+        document.getElementById('currentTicketId').value = ticketId;
+        document.getElementById('closingProtocol').textContent = protocol;
+        closeTicketModal.classList.remove('hidden');
+    }
+    window.openCloseTicketModal = openCloseTicketModal; // Torna global para o onclick
+    
+    // Lógica de Encerramento (agora no submit do modal)
+    document.getElementById('closeTicketForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const ticketId = document.getElementById('currentTicketId').value;
+        const serviceDetails = document.getElementById('serviceDetails').value;
+        
         const { error } = await supabaseClient
             .from('tickets')
-            .update({ status: 'closed', closed_at: new Date().toISOString() })
+            .update({ 
+                status: 'closed', 
+                closed_at: new Date().toISOString(),
+                service_details: serviceDetails // SALVA A DESCRIÇÃO E VALOR AQUI
+            })
             .eq('id', ticketId);
 
         if (error) {
             alert('Erro ao fechar chamado!');
+            console.error('Erro ao fechar chamado:', error);
         } else {
             alert('Chamado encerrado com sucesso!');
+            closeTicketModal.classList.add('hidden');
+            document.getElementById('closeTicketForm').reset();
             loadAdminDashboard();
         }
-    }
+    });
 
     async function deleteTicket(ticketId) {
         if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
@@ -574,7 +591,7 @@
     
     // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
     window.startTicket = startTicket;
-    window.closeTicket = closeTicket;
+    // window.closeTicket é substituída por openCloseTicketModal
     window.deleteTicket = deleteTicket;
 
     // ------------------------------------------------------------------
@@ -698,44 +715,6 @@
         loadClientDashboard(); // Atualiza a lista de chamados do cliente
     });
 
-    // NOVO: FUNÇÃO ADICIONAR SERVIÇO
-    document.getElementById('addServiceForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const serviceName = document.getElementById('serviceName').value;
-        const serviceValue = parseFloat(document.getElementById('serviceValue').value);
-
-        if (!currentUser || currentUser.user_metadata.role !== 'admin') {
-            alert('Acesso negado. Apenas administradores podem adicionar serviços.');
-            return;
-        }
-
-        if (isNaN(serviceValue) || serviceValue <= 0) {
-            alert('Por favor, insira um valor válido para o serviço (maior que zero).');
-            return;
-        }
-
-        // Insere o novo serviço na tabela 'services'
-        // ATENÇÃO: Esta tabela deve ser criada manualmente no Supabase (ver passo 2)
-        const { error: insertError } = await supabaseClient
-            .from('services') 
-            .insert({
-                service_name: serviceName,
-                service_value: serviceValue,
-                created_by: currentUser.id // Opcional, mas útil para RLS
-            });
-
-        if (insertError) {
-            console.error('Erro ao adicionar serviço:', insertError);
-            alert(`Erro ao adicionar serviço: ${insertError.message}. Verifique se a tabela 'services' existe no Supabase.`);
-            return;
-        }
-
-        alert(`Serviço "${serviceName}" adicionado com sucesso!`);
-
-        document.getElementById('addServiceModal').classList.add('hidden');
-        document.getElementById('addServiceForm').reset();
-    });
 
     // Funções de controle dos modais
     document.getElementById('createUserBtn').addEventListener('click', () => createUserModal.classList.remove('hidden'));
@@ -743,9 +722,8 @@
     document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
     document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
     
-    // NOVO: Controle do Modal de Serviço
-    document.getElementById('addServiceBtn').addEventListener('click', () => addServiceModal.classList.remove('hidden'));
-    document.getElementById('cancelAddService').addEventListener('click', () => addServiceModal.classList.add('hidden'));
+    // Controle do Modal de Fechamento de Chamado
+    document.getElementById('cancelCloseTicket').addEventListener('click', () => closeTicketModal.classList.add('hidden'));
     
     // Funções de controle do modal de relatório
     generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
@@ -774,7 +752,7 @@
         return tickets;
     }
     
-    // Geração de PDF Individual (Mantida por compatibilidade)
+    // Geração de PDF Individual (AGORA INCLUI service_details)
     async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
@@ -789,6 +767,17 @@
         
         const statusText = ticket.status.toUpperCase().replace('_', ' ');
         const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
+        
+        // Formata a descrição do serviço para o PDF
+        const serviceDetailsHtml = ticket.service_details 
+            ? `
+                <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
+                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe;">
+                    ${ticket.service_details.replace(/\n/g, '<br>')}
+                </div>
+              `
+            : '<p style="margin-top: 20px;"><strong>Serviço/Valor:</strong> Não Informado.</p>';
+
 
         const content = document.createElement('div');
         content.style.padding = '20px';
@@ -801,11 +790,16 @@
             <p><strong>Solicitante:</strong> ${ticket.requester}</p>
             <p><strong>Aberto em:</strong> ${dateCreated}</p>
             <p><strong>Status:</strong> ${statusText}</p>
-            <p><strong>Descrição:</strong></p>
+            
+            <p style="font-weight: bold; margin-top: 20px;">DESCRIÇÃO DO PROBLEMA:</p>
             <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9;">
                 ${ticket.description.replace(/\n/g, '<br>')}
             </div>
+
+            ${serviceDetailsHtml}
+
             <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
+            
             <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px dashed #ccc;">
                 <p>Assinatura do Responsável T.I:</p>
                 <div style="width: 200px; height: 1px; border-top: 1px solid #000; margin: 10px auto;"></div>
@@ -864,6 +858,12 @@
             const ticketDescription = ticket.description ? ticket.description.substring(0, 150) + (ticket.description.length > 150 ? '...' : '') : 'N/A';
             const requesterName = ticket.requester || 'N/A';
             const createdAtDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : 'N/A';
+            
+            // Inclui a informação do serviço no relatório consolidado
+            const serviceSummary = ticket.service_details 
+                ? `<p style="margin: 2px 0; color: #3b82f6;"><strong>Serviço:</strong> ${ticket.service_details.split('\n')[0].substring(0, 50)}...</p>`
+                : `<p style="margin: 2px 0; color: #6b7280;"><strong>Serviço:</strong> Não informado</p>`;
+
 
             const ticketHtml = `
                 <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -874,8 +874,8 @@
                     <div style="font-size: 0.9em; line-height: 1.5;">
                         <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
                         <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
-                        <p style="margin: 2px 0;"><strong>Descrição:</strong> ${ticketDescription}</p>
-                        <p style="margin: 2px 0; color: ${ticket.attachment_url ? '#3b82f6' : '#6b7280'};"><strong>Anexo:</strong> ${ticket.attachment_url ? 'Sim (Verificado)' : 'Não'}</p>
+                        <p style="margin: 2px 0;"><strong>Descrição do Problema:</strong> ${ticketDescription}</p>
+                        ${serviceSummary} 
                     </div>
                 </div>
             `;
