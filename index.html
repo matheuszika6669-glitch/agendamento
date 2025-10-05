@@ -59,7 +59,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm">
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Acesso ao Sistema</h3>
             <form id="loginForm" class="space-y-4">
-                <input type="text" id="loginUsername" placeholder="Seu Usuário" required
+                <input type="text" id="loginUsername" placeholder="Seu Usuário (E-mail)" required
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 <input type="password" id="loginPassword" placeholder="Sua Senha" required
                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
@@ -101,7 +101,7 @@
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório de Chamados</h3>
             <div id="reportContent" class="text-gray-700 dark:text-gray-300 mb-4">
                 <p>O relatório será gerado em PDF com todos os chamados dos últimos 30 dias.</p>
-                <p class="mt-2 text-sm font-semibold">Os valores de cada chamado e o total serão incluídos.</p>
+                <p class="mt-2 text-sm font-semibold">Os valores de serviço aplicados e o total serão incluídos.</p>
             </div>
             <div class="flex justify-end space-x-4">
                 <button onclick="gerarRelatorioPDFLote()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition-colors">
@@ -131,7 +131,7 @@
                     <input type="number" step="0.01" id="serviceValueInput" required 
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="0.00">
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Ajuste o valor aqui. Útil para custos de peça ou horas extras de serviço.
+                        Ajuste o valor aqui, se necessário, com base no valor base do serviço.
                     </p>
                 </div>
                 <div class="flex space-x-4">
@@ -208,12 +208,13 @@
     }
 
     // ------------------------------------------------------------------
-    // 3. FUNÇÕES DE AUTENTICAÇÃO
+    // 3. FUNÇÕES DE AUTENTICAÇÃO (CORRIGIDA)
     // ------------------------------------------------------------------
 
     // 3.1. Função para buscar a Role do usuário
     async function getRole() {
         if (!currentUser) return null;
+        
         const { data, error } = await supabaseClient
             .from('users')
             .select('role')
@@ -222,7 +223,7 @@
 
         if (error) {
             console.error("Erro ao buscar role:", error);
-            return null;
+            return null; 
         }
         return data ? data.role : null;
     }
@@ -246,44 +247,31 @@
         }
     });
 
-    // 3.3. Função de Login
+    // 3.3. Função de Login (FLUXO ORIGINAL RESTAURADO: username = email)
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        const username = document.getElementById('loginUsername').value.trim();
+        
+        const email = document.getElementById('loginUsername').value.trim(); 
         const password = document.getElementById('loginPassword').value;
         const errorDisplay = document.getElementById('loginError');
         errorDisplay.classList.add('hidden');
 
         showLoading();
 
-        // 1. Busca o e-mail/ID no `users` baseado no `username`
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('id')
-            .eq('username', username)
-            .single();
-            
-        if (userError || !userData) {
-            hideLoading();
-            errorDisplay.textContent = 'Usuário não encontrado.';
-            errorDisplay.classList.remove('hidden');
-            return;
-        }
-
-        // 2. Tenta fazer login com o ID (email) e senha
+        // Faz o login direto usando o e-mail (username) e a senha
         const { error: authError } = await supabaseClient.auth.signInWithPassword({
-            email: username, // Assumindo que o username é o email de login real
+            email: email, 
             password: password,
         });
 
         if (authError) {
             hideLoading();
             console.error("Erro de login:", authError);
-            errorDisplay.textContent = 'Credenciais inválidas.';
+            errorDisplay.textContent = 'Credenciais inválidas ou e-mail/senha incorretos.';
             errorDisplay.classList.remove('hidden');
         } else {
             loginModal.classList.add('hidden');
-            // O onAuthStateChange fará o resto
+            // O onAuthStateChange fará o restante da renderização
         }
     });
 
@@ -296,13 +284,13 @@
     }
 
     // ------------------------------------------------------------------
-    // 4. LÓGICA DO CLIENTE
+    // 4. LÓGICA DO CLIENTE (SEM SELEÇÃO DE SERVIÇO)
     // ------------------------------------------------------------------
 
     // 4.1. Renderiza o Dashboard do Cliente
     async function loadClientDashboard() {
         showLoading();
-        // MUDANÇA: Adiciona o service_value para o cliente ver o valor
+        // Inclui service_value para o cliente ver o valor
         const userTickets = await fetchUserTickets(`
             id, protocol, requester, description, status, created_at, closed_at, service_value,
             ticket_attachments(attachment_url)
@@ -467,15 +455,12 @@
         const currentTicket = allTickets.find(t => t.id == ticketId);
         
         serviceTicketId.value = ticketId;
-        // Preenche o valor e o service_id atual do ticket no modal (se já existirem)
-        serviceValueInput.value = currentTicket.service_value ? parseFloat(currentTicket.service_value).toFixed(2) : '';
-
+        
         // Preenche o <select> com os serviços disponíveis
         serviceSelect.innerHTML = '<option value="">Selecione o Serviço Aplicado</option>';
         availableServices.forEach(service => {
             const option = document.createElement('option');
-            // MUDANÇA CRÍTICA: O value agora salva o ID e o preço, separados por '|'
-            option.value = `${service.id}|${service.price}`; 
+            option.value = service.id; // Salva apenas o ID do serviço
             option.textContent = `${service.service_name} (Base: ${formatCurrency(service.price)})`;
             
             // Pré-seleciona o serviço se ele já tiver sido definido
@@ -486,15 +471,20 @@
             serviceSelect.appendChild(option);
         });
         
+        // Define o valor do input (usa o valor já salvo no ticket, se existir)
+        serviceValueInput.value = currentTicket.service_value ? parseFloat(currentTicket.service_value).toFixed(2) : '';
+
         setServiceModal.classList.remove('hidden');
     }
 
     // Preenche o input de valor ao selecionar o serviço
     serviceSelect.addEventListener('change', function() {
-        const selectedValue = this.value; // Recebe "ID|Preço"
-        if (selectedValue) {
-            const price = selectedValue.split('|')[1];
-            serviceValueInput.value = parseFloat(price).toFixed(2);
+        const selectedId = parseInt(this.value); 
+        const service = availableServices.find(s => s.id === selectedId);
+
+        if (service) {
+            // Usa o preço base do serviço como sugestão
+            serviceValueInput.value = parseFloat(service.price).toFixed(2);
         } else {
             serviceValueInput.value = '';
         }
@@ -505,8 +495,7 @@
         e.preventDefault();
         
         const ticketId = serviceTicketId.value;
-        const selectedValue = serviceSelect.value; // Recebe "ID|Preço"
-        const serviceId = parseInt(selectedValue.split('|')[0]); // Pega o ID
+        const serviceId = parseInt(serviceSelect.value); // Pega o ID
         const value = parseFloat(serviceValueInput.value);
 
         if (isNaN(value) || value < 0) {
@@ -516,7 +505,7 @@
 
         const updateData = { 
             service_value: value,
-            service_id: serviceId // Salva o ID do serviço para futura referência
+            service_id: serviceId 
         };
 
         const { error } = await supabaseClient
@@ -537,14 +526,14 @@
     document.getElementById('cancelSetService').addEventListener('click', () => setServiceModal.classList.add('hidden'));
 
 
-    // 5.3. Renderiza o Dashboard do Admin (MUDANÇA CRÍTICA AQUI)
+    // 5.3. Renderiza o Dashboard do Admin
     let allTickets = [];
 
     async function loadAdminDashboard() {
         showLoading();
         await fetchAvailableServices(); 
 
-        // MUDANÇA CRÍTICA: Inclui service_name na consulta
+        // Adicionamos o JOIN com 'services' para trazer o nome do serviço
         const { data, error } = await supabaseClient
             .from('tickets')
             .select(`
@@ -566,7 +555,7 @@
             ...ticket,
             requester_username: ticket.users.username,
             attachment_url: ticket.ticket_attachments.length > 0 ? ticket.ticket_attachments[0].attachment_url : null,
-            // NOVO: Extrai o nome do serviço para exibição
+            // Extrai o nome do serviço para exibição
             service_name: ticket.services ? ticket.services.service_name : null 
         }));
 
@@ -586,20 +575,17 @@
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Protocolo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aberto Por</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Serviço Aplicado</th> <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Serviço Aplicado</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             ${allTickets.map(ticket => {
-                                const attachmentLink = ticket.attachment_url ? 
-                                    `<a href="${ticket.attachment_url}" target="_blank" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold">Ver Anexo</a>` : 
-                                    'Nenhum';
-                                    
                                 const serviceValue = formatCurrency(ticket.service_value);
                                 
-                                // NOVO: Exibe o nome do serviço ou 'A Definir'
+                                // Exibe o nome do serviço ou 'A Definir'
                                 const serviceNameDisplay = ticket.service_name 
                                     ? ticket.service_name 
                                     : `<span class="text-red-500">A Definir</span>`; 
@@ -618,7 +604,8 @@
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition duration-150">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${ticket.protocol || 'N/A'}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${ticket.requester_username} (${ticket.requester})</td>
-                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${serviceNameDisplay}</td> <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">${serviceValue}</td> 
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">${serviceNameDisplay}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">${serviceValue}</td> 
                                         <td class="px-6 py-4 whitespace-nowrap">${getStatusBadge(ticket.status)}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">${actions}</td>
                                     </tr>
@@ -663,11 +650,12 @@
     // 6. GERAÇÃO DE RELATÓRIO PDF EM LOTE
     // ------------------------------------------------------------------
 
-    // 6.1. Busca os tickets dos últimos 30 dias (MODIFICADO para incluir service_name)
+    // 6.1. Busca os tickets dos últimos 30 dias
     async function buscarTicketsUltimos30Dias() {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
+        // Incluímos o JOIN com 'services'
         const { data, error } = await supabaseClient
             .from('tickets')
             .select(`
