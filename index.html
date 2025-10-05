@@ -14,6 +14,13 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .dark-mode { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #e2e8f0; }
         .light-mode { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #1a202c; }
+
+        /* Estilo para garantir que o input file seja clicável no mobile */
+        #ticketAttachment {
+            cursor: pointer;
+            padding-top: 8px; /* Adiciona padding para facilitar o toque */
+            padding-bottom: 8px;
+        }
     </style>
 </head>
 <body class="min-h-screen transition-all duration-300 dark-mode">
@@ -189,8 +196,8 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Anexar Arquivo (Opcional - Máx. 5MB)</label>
                     <input type="file" id="ticketAttachment" 
                                class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150"
-                               accept=".jpg, .jpeg, .png, .pdf, .doc, .docx">
-                </div>
+                               accept="image/*, application/pdf, .doc, .docx" 
+                               capture="filesystem"> </div>
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors">
                         Enviar Chamado
@@ -519,7 +526,7 @@
                      </div>
                      <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">${ticket.description}</p>
                      <div class="flex justify-between items-center text-xs text-gray-400">
-                         <p>Aberto em: ${new Date(ticket.created_at).toLocaleString('pt-BR')}</p>
+                         <p>Aberto em: ${new Date(ticket.created_at).toLocaleDateString('pt-BR')}</p>
                          ${attachmentHtml} 
                      </div>
                  </div>
@@ -667,6 +674,13 @@
 
         // 1. UPLOAD DO ARQUIVO PARA O SUPABASE STORAGE (SE HOUVER ARQUIVO)
         if (file) {
+            // Verifica o tamanho do arquivo (limite de 5MB)
+            const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                 alert('O arquivo excede o limite de 5MB. Por favor, selecione um arquivo menor.');
+                 return;
+            }
+
             // Gera um caminho único: client_user_id/protocolo-timestamp.ext
             const fileExt = file.name.split('.').pop();
             const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
@@ -760,7 +774,7 @@
         return tickets;
     }
     
-    // Geração de PDF Individual (AGORA INCLUI service_details)
+    // Geração de PDF Individual (AGORA COM ESPAÇO MAIOR PARA ASSINATURA)
     async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
@@ -808,9 +822,10 @@
 
             <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
             
-            <div style="margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px dashed #ccc;">
-                <p>Assinatura do Responsável T.I:</p>
-                <div style="width: 200px; height: 1px; border-top: 1px solid #000; margin: 10px auto;"></div>
+            <div style="margin-top: 50px; text-align: center; padding: 20px; border: 1px dashed #ccc; background-color: #f4f4f4;">
+                <h4 style="margin-bottom: 20px; color: #4b5563;">ESPAÇO RESERVADO PARA ASSINATURA DIGITAL / CARIMBO</h4>
+                <div style="height: 60px;"></div>
+                <p style="font-size: 0.9em; margin-top: 10px;">Assinatura do Responsável T.I. e Assinatura do Cliente/Gestor</p>
             </div>
         `;
 
@@ -826,7 +841,7 @@
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM O CAMPO DE VALOR TOTAL
+    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM O CAMPO DE VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA
     async function gerarRelatorioPDFLote() {
         
         // 1. CAPTURA O VALOR DIGITADO NO MODAL
@@ -908,23 +923,17 @@
 
         // 5. Adiciona o VALOR TOTAL e a seção de rodapé e assinatura
         content.innerHTML += `
-            ${totalValueHtml} <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
+            ${totalValueHtml} <div style="margin-top: 60px; padding-top: 20px; page-break-before: auto;">
                 <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
                     Este relatório consolida a atividade de chamados de T.I. no período.
                 </p>
                 
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="width: 50%; text-align: center; padding: 0 10px;">
-                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 30px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
-                        </td>
-                        <td style="width: 50%; text-align: center; padding: 0 10px;">
-                            <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 30px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
-                        </td>
-                    </tr>
-                </table>
+                <div style="margin-top: 20px; text-align: center; padding: 20px; border: 1px dashed #ccc; background-color: #f4f4f4;">
+                    <h4 style="margin-bottom: 20px; color: #4b5563;">ESPAÇO RESERVADO PARA ASSINATURA DIGITAL / CARIMBO</h4>
+                    <div style="height: 60px;"></div>
+                    <p style="font-size: 0.9em; margin-top: 10px;">Assinatura do Responsável T.I. e Assinatura do Cliente/Gestor</p>
+                </div>
+
                 <div style="text-align: center; margin-top: 30px; font-size: 0.75em; color: #9ca3af;">
                     <p>Documento gerado eletronicamente.</p>
                 </div>
