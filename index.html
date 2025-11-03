@@ -293,7 +293,7 @@
     const clientDashboard = document.getElementById('clientDashboard');
     const createUserModal = document.getElementById('createUserModal');
     const newTicketModal = document.getElementById('newTicketModal');
-    const closeTicketModal = document.getElementById('closeTicketModal'); // RE-INCLUÍDO
+    const closeTicketModal = document.getElementById('closeTicketModal'); 
     const reportModal = document.getElementById('reportModal');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
@@ -604,7 +604,7 @@
     
     // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
     window.startTicket = startTicket;
-    window.deleteTicket = deleteTicket; // closeTicket foi substituído por openCloseTicketModal
+    window.deleteTicket = deleteTicket; 
     // ------------------------------------------------------------------
     // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
     // ------------------------------------------------------------------
@@ -770,7 +770,7 @@
         return tickets;
     }
     
-    // Geração de PDF Individual (CORRIGIDO PARA LEGIBILIDADE E MODO CLARO)
+    // Geração de PDF Individual (CORRIGIDO PARA O PROBLEMA DO BRANCO)
     async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
@@ -786,7 +786,6 @@
         const statusText = ticket.status.toUpperCase().replace('_', ' ');
         const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
         
-        // Formata a descrição do serviço para o PDF
         const serviceDetailsHtml = ticket.service_details 
             ? `
                 <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
@@ -824,12 +823,14 @@
             </div>
         `;
 
-        // 🛑 CORREÇÃO PRINCIPAL: Cria e usa um elemento DOM temporário para renderizar o HTML com os estilos corretos
+        // CORREÇÃO DE RENDERIZAÇÃO: Garante que o elemento seja anexado e removido corretamente do DOM com dimensões
         const tempElement = document.createElement('div');
         tempElement.innerHTML = htmlContent;
-        // Oculta o elemento da tela (mas precisa estar no DOM para o html2canvas funcionar bem)
+        // 🛑 Ocultação e dimensionamento robustos para html2canvas
         tempElement.style.position = 'absolute';
+        tempElement.style.top = '0'; 
         tempElement.style.left = '-9999px';
+        tempElement.style.width = '210mm'; // Garante uma largura mínima (A4)
         document.body.appendChild(tempElement);
         
         const options = {
@@ -837,13 +838,12 @@
             filename: `${ticket.protocol}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
-                scale: 2, // Mantém a escala para boa resolução
-                letterRendering: true // CORREÇÃO: Melhora a renderização de texto
+                scale: 2, 
+                letterRendering: true // Melhora o renderização de texto
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Usa o elemento DOM temporário
         html2pdf().from(tempElement).set(options).save().then(() => {
             // Remove o elemento temporário após a geração
             document.body.removeChild(tempElement);
@@ -852,26 +852,20 @@
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA (CORRIGIDO PARA MODO CLARO)
+    // FUNÇÃO DE GERAÇÃO EM LOTE - CORRIGIDA PARA O PROBLEMA DO BRANCO
     async function gerarRelatorioPDFLote() {
         
-        // 1. CAPTURA O VALOR DIGITADO NO MODAL
         const totalValue = document.getElementById('totalValueReport').value.trim(); 
         
         reportModal.classList.add('hidden');
         
         const tickets = await buscarTicketsUltimos30Dias();
 
-        if (!tickets) {
-            return;
-        }
-
-        if (tickets.length === 0) {
+        if (!tickets || tickets.length === 0) {
             alert('Nenhum chamado encontrado nos últimos 30 dias para gerar o relatório.');
             return;
         }
         
-        // 2. CRIA O HTML DO VALOR TOTAL (SE HOUVER VALOR)
         let totalValueHtml = '';
         if (totalValue) {
             totalValueHtml = `
@@ -887,8 +881,8 @@
         const content = document.createElement('div');
         content.style.padding = '20px';
         content.style.fontFamily = 'Arial, sans-serif';
-        content.style.color = '#1a202c'; // CORREÇÃO: Força a cor do texto principal
-        content.style.backgroundColor = '#ffffff'; // CORREÇÃO: Força o fundo branco
+        content.style.color = '#1a202c'; 
+        content.style.backgroundColor = '#ffffff'; 
         
         content.innerHTML = `
             <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
@@ -902,7 +896,6 @@
             <p style="text-align: right; font-size: 0.8em; color: #6b7280;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
         `;
         
-        // 4. Itera sobre os tickets e adiciona ao conteúdo
         tickets.forEach((ticket, index) => {
             const statusColor = ticket.status === 'closed' ? '#10b981' : (ticket.status === 'open' ? '#f59e0b' : '#3b82f6');
             const statusText = ticket.status.toUpperCase().replace('_', ' ');
@@ -910,7 +903,6 @@
             const requesterName = ticket.requester || 'N/A';
             const createdAtDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : 'N/A';
             
-            // Inclui a informação do serviço no relatório consolidado
             const serviceSummary = ticket.service_details 
                 ? `<p style="margin: 2px 0; color: #3b82f6;"><strong>Serviço:</strong> ${ticket.service_details.split('\n')[0].substring(0, 50)}...</p>`
                 : `<p style="margin: 2px 0; color: #6b7280;"><strong>Serviço:</strong> Não informado</p>`;
@@ -933,7 +925,6 @@
             content.innerHTML += ticketHtml;
         });
 
-        // 5. Adiciona o VALOR TOTAL e a seção de rodapé e assinatura
         content.innerHTML += `
             ${totalValueHtml} <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
                 <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
@@ -957,8 +948,14 @@
                 </div>
             </div>
         `;
+        
+        // CORREÇÃO DE RENDERIZAÇÃO: Garante que o elemento seja anexado e removido corretamente do DOM com dimensões
+        content.style.position = 'absolute';
+        content.style.top = '0';
+        content.style.left = '-9999px';
+        content.style.width = '210mm'; // Garante largura A4 para renderização correta
+        document.body.appendChild(content); // 🛑 CRÍTICO: Anexa o elemento ao DOM
 
-        // 6. Gera e salva o PDF
         const options = {
             margin: 10,
             filename: `Relatorio_30Dias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
@@ -967,12 +964,12 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // Usa o elemento DOM com os estilos forçados
-        html2pdf().from(content).set(options).save();
-        alert('Relatório consolidado gerado com sucesso!');
+        html2pdf().from(content).set(options).save().then(() => {
+            document.body.removeChild(content); // 🛑 CRÍTICO: Remove o elemento após a geração
+            alert('Relatório consolidado gerado com sucesso!');
+        });
     }
     
-    // TORNA A FUNÇÃO DE GERAÇÃO EM LOTE GLOBA L
     window.gerarRelatorioPDFLote = gerarRelatorioPDFLote;
 
 
