@@ -23,8 +23,9 @@
         }
         
         /* Estilos CSS CRÍTICOS para o PDF: Força o fundo branco e texto escuro para o html2canvas */
+        /* Importante para que o PDF não pegue o fundo escuro do dashboard */
         .pdf-content-wrapper {
-            background-color: #ffffff !important; /* !important adicionado por segurança */
+            background-color: #ffffff !important; 
             color: #1a202c !important; 
             padding: 20px;
             font-family: Arial, sans-serif;
@@ -251,10 +252,10 @@
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório Personalizado</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">Selecione os chamados dos últimos 30 dias para incluir no PDF.</p>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">Selecione os chamados dos últimos 30 dias para incluir no PDF (Um relatório por chamado).</p>
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Total do Período (Opcional)</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Total do Período (Opcional, aparece na 1ª página)</label>
                 <input type="text" id="totalValueReport" 
                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" 
                     placeholder="Ex: R$ 5.500,00 ou 5500.00"
@@ -336,7 +337,7 @@
     }
     
     // ------------------------------------------------------------------
-    // 1. FUNÇÕES DE LOGIN E AUTENTICAÇÃO (Sem Alteração)
+    // 1. FUNÇÕES DE LOGIN E AUTENTICAÇÃO
     // ------------------------------------------------------------------
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -474,7 +475,9 @@
                 actions += `<button onclick="openCloseTicketModal('${ticket.id}', '${ticket.protocol}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
             
-            // REMOVIDO: Botão PDF Individual (Agora tudo é feito pelo relatório personalizado)
+            // Botão PDF Individual (mantido para testes rápidos, mas o principal é o Relatório Personalizado)
+            actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
+
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
             
             // Lógica para exibir o link de anexo
@@ -496,7 +499,7 @@
         });
     }
 
-    // Carregamento de tickets do Cliente (Sem Alteração)
+    // Carregamento de tickets do Cliente
     async function loadClientTickets() {
         if (!currentUser || !currentUser.id) return;
 
@@ -653,7 +656,7 @@
                 item.className = 'flex items-start p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600';
                 item.innerHTML = `
                     <input type="checkbox" id="ticket-${ticket.id}" data-id="${ticket.id}" 
-                           class="mt-1 mr-3 h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                           class="mt-1 mr-3 h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500" checked>
                     <label for="ticket-${ticket.id}" class="flex-1 cursor-pointer">
                         <p class="font-semibold text-gray-900 dark:text-white">${ticket.protocol} - ${ticket.requester}</p>
                         <p class="text-sm text-gray-600 dark:text-gray-300 truncate max-w-lg">${ticket.description}</p>
@@ -669,8 +672,7 @@
     
     generateReportBtn.addEventListener('click', openTicketSelectionModal);
     cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
-    confirmGeneratePDF.addEventListener('click', generateSelectedTicketsPDF);
-
+    confirmGeneratePDF.addEventListener('click', generateSelectedTicketsPDF); // Chama a função principal de Geração em Lote
 
     // FUNÇÃO CRIAR USUÁRIO 
     document.getElementById('createUserForm').addEventListener('submit', async function(e) {
@@ -735,7 +737,7 @@
                  return;
             }
 
-            const fileExt = file.name.split('.').pop();
+            const fileExt = file.name.split('.pop()');
             const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
             const bucketName = 'ticket_attachments'; 
             
@@ -796,11 +798,22 @@
     document.getElementById('cancelCloseTicket').addEventListener('click', () => closeTicketModal.classList.add('hidden'));
     
     // ------------------------------------------------------------------
-    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E REVISADAS)
+    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS DEFINITIVAMENTE PARA BRANCO E LÓGICA DE LOTE)
     // ------------------------------------------------------------------
+    
+    // Geração de PDF Individual (Mantida apenas para o botão "PDF" da tabela)
+    async function generateTicketPDF(ticketId) {
+        const { data: ticket, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('id', ticketId)
+            .single();
 
-    // HELPER: Cria o conteúdo HTML completo e estruturado de UM ticket para o PDF
-    function createTicketReportContent(ticket) {
+        if (error || !ticket) {
+            alert('Erro ao buscar detalhes do chamado.');
+            return;
+        }
+        
         const statusText = ticket.status.toUpperCase().replace('_', ' ');
         const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
         
@@ -812,35 +825,73 @@
                 </div>
               `
             : '<p style="margin-top: 20px; color: #1a202c;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
-        
-        // Retorna o HTML com estilos de impressão garantidos
-        return `
-            <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
-                    <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
-                </div>
-                <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
-                <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
-                <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
-                
-                <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
-                <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
-                    ${ticket.description.replace(/\n/g, '<br>')}
-                </div>
 
-                ${serviceDetailsHtml}
 
-                <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
-                
-                <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
-                    <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
-                    <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
-                    <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
-                </div>
+        // 1. Cria o elemento div com o conteúdo
+        const content = document.createElement('div');
+        content.className = 'pdf-content-wrapper'; // Aplica o estilo crítico
+        content.style.pageBreakAfter = 'auto'; // Garante quebra apenas na versão em lote
+        content.innerHTML = `
+            <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
+            </div>
+            <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+            <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
+            <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
+            
+            <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
+            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
+                ${ticket.description.replace(/\n/g, '<br>')}
+            </div>
+
+            ${serviceDetailsHtml}
+
+            <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
+            
+            <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
+                <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
+                <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
+                <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
             </div>
         `;
+
+        // 2. CRÍTICO: Adiciona à página fora da tela para garantir a renderização
+        const tempElement = document.createElement('div');
+        tempElement.appendChild(content);
+        tempElement.style.position = 'absolute';
+        tempElement.style.top = '0';
+        tempElement.style.left = '-9999px';
+        tempElement.style.width = '210mm'; 
+        document.body.appendChild(tempElement); 
+        
+        // 3. CRÍTICO: Pausa forçada de 50ms para renderização
+        await new Promise(resolve => setTimeout(resolve, 50)); 
+        
+        const options = {
+            margin: 10,
+            filename: `${ticket.protocol}.pdf`,
+            html2canvas: { 
+                scale: 2, 
+                letterRendering: true, 
+                backgroundColor: '#ffffff'
+            }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // 4. Gera o PDF e remove o elemento temporário
+        html2pdf().from(tempElement).set(options).save().then(() => {
+            document.body.removeChild(tempElement); 
+        }).catch(err => {
+             if (document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement);
+             }
+             console.error("Erro ao gerar PDF:", err);
+             alert("Ocorreu um erro ao gerar o PDF. Verifique o console.");
+        });
     }
+    window.generateTicketPDF = generateTicketPDF;
+
 
     // FUNÇÃO PRINCIPAL: Gera um único PDF contendo múltiplos relatórios de tickets selecionados
     async function generateSelectedTicketsPDF() {
@@ -858,8 +909,14 @@
         // Mapeia os IDs selecionados
         const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
 
-        // Filtra os tickets do cache
+        // Filtra os tickets do cache (cachedTickets foi populado em openTicketSelectionModal)
         const ticketsToGenerate = cachedTickets.filter(ticket => selectedIds.includes(ticket.id));
+        
+        if (ticketsToGenerate.length === 0) {
+             alert('Nenhum ticket válido encontrado entre os selecionados. Tente novamente.');
+             return;
+        }
+
 
         const contentWrapper = document.createElement('div');
         // Garante que o CSS de fundo branco e texto escuro será aplicado
@@ -869,7 +926,7 @@
         // 1. Adiciona um cabeçalho consolidado, opcional
         if (totalValue || ticketsToGenerate.length > 0) {
             let consolidatedHeader = `
-                <div style="padding: 20px; font-family: Arial, sans-serif; background-color: #ffffff; color: #1a202c; page-break-after: always;">
+                <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
                     <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
                         <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO DE SERVIÇOS T.I.</h1>
                         <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Total de Chamados Selecionados: ${ticketsToGenerate.length}</p>
@@ -893,7 +950,45 @@
 
         // 2. Concatena os relatórios de tickets (um por página)
         ticketsToGenerate.forEach(ticket => {
-            contentWrapper.innerHTML += createTicketReportContent(ticket);
+             // Usa a mesma lógica de formatação do PDF individual
+             const statusText = ticket.status.toUpperCase().replace('_', ' ');
+             const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
+             
+             const serviceDetailsHtml = ticket.service_details 
+                 ? `
+                     <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
+                     <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe; color: #1a202c;">
+                         ${ticket.service_details.replace(/\n/g, '<br>')}
+                     </div>
+                   `
+                 : '<p style="margin-top: 20px; color: #1a202c;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+
+            contentWrapper.innerHTML += `
+                <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
+                    <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+                        <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
+                    </div>
+                    <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+                    <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
+                    <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
+                    
+                    <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
+                    <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
+                        ${ticket.description.replace(/\n/g, '<br>')}
+                    </div>
+
+                    ${serviceDetailsHtml}
+
+                    <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
+                    
+                    <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
+                        <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
+                        <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
+                        <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
+                    </div>
+                </div>
+            `;
         });
 
         // CRÍTICO: Cria o elemento temporário para a renderização do PDF
@@ -908,7 +1003,7 @@
         
         document.body.appendChild(tempElement); 
         
-        // ***** CORREÇÃO DE TIMING: Adiciona um pequeno atraso (50ms) para renderização *****
+        // ***** CRÍTICO: CORREÇÃO DE TIMING: Adiciona um pequeno atraso (50ms) para renderização *****
         await new Promise(resolve => setTimeout(resolve, 50)); 
         // **********************************************************************************
 
