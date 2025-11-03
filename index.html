@@ -21,15 +21,6 @@
             padding-top: 8px; 
             padding-bottom: 8px;
         }
-        
-        /* Estilos CSS CRÍTICOS para o PDF: Força o fundo branco e texto escuro para o html2canvas */
-        .pdf-content-wrapper {
-            background-color: #ffffff !important; 
-            color: #1a202c !important; 
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            page-break-after: always; /* Garante quebra de página entre relatórios */
-        }
     </style>
 </head>
 <body class="min-h-screen transition-all duration-300 dark-mode">
@@ -102,7 +93,7 @@
                         + Criar Usuário (Cliente)
                     </button>
                     <button id="generateReportBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
-                        📊 Gerar Relatório Personalizado
+                        📊 Gerar Relatório 30 Dias
                     </button>
                 </div>
             </div>
@@ -246,27 +237,21 @@
             </form>
         </div>
     </div>
-
     <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório Personalizado</h3>
-            <p class="text-gray-600 dark:text-gray-300 mb-4">Selecione os chamados dos últimos 30 dias para incluir no PDF (Um relatório por chamado).</p>
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Gerar Relatório</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-4">Será gerado um relatório consolidado com todos os chamados dos últimos 30 dias.</p>
             
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor Total do Período (Opcional, aparece na 1ª página)</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valor total dos últimos 30 dias (Opcional)</label>
                 <input type="text" id="totalValueReport" 
                     class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" 
                     placeholder="Ex: R$ 5.500,00 ou 5500.00"
                 >
             </div>
-
-            <div id="ticketSelectionList" class="space-y-3 mb-6 max-h-80 overflow-y-auto p-2 border rounded-lg dark:border-gray-700">
-                <p class="text-center text-gray-500">Nenhum chamado dos últimos 30 dias encontrado.</p>
-            </div>
-
             <div class="flex space-x-4">
                 <button id="confirmGeneratePDF" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg transition-colors">
-                    Gerar PDF(s) Selecionados
+                    Confirmar e Gerar PDF
                 </button>
                 <button id="cancelReport" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg transition-colors">
                     Cancelar
@@ -301,19 +286,17 @@
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); 
 
     let currentUser = null;
-    let cachedTickets = []; // Cache para armazenar os tickets dos últimos 30 dias
-
+    
     // Referências do DOM
     const loginScreen = document.getElementById('loginScreen');
     const adminDashboard = document.getElementById('adminDashboard');
     const clientDashboard = document.getElementById('clientDashboard');
     const createUserModal = document.getElementById('createUserModal');
     const newTicketModal = document.getElementById('newTicketModal');
-    const closeTicketModal = document.getElementById('closeTicketModal'); 
+    const closeTicketModal = document.getElementById('closeTicketModal'); // RE-INCLUÍDO
     const reportModal = document.getElementById('reportModal');
     const generateReportBtn = document.getElementById('generateReportBtn');
     const confirmGeneratePDF = document.getElementById('confirmGeneratePDF');
-    const cancelReport = document.getElementById('cancelReport');
     const themeToggle = document.getElementById('themeToggle');
 
     // Função auxiliar para mostrar o dashboard correto
@@ -343,6 +326,7 @@
         const email = document.getElementById('username').value; 
         const password = document.getElementById('password').value;
 
+        // Tenta o LOGIN PADRÃO
         const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
             email: email, 
             password: password,
@@ -354,6 +338,7 @@
             return;
         }
 
+        // Busca o ROLE do usuário
         const userId = authData.user.id;
         await fetchUserRole(userId);
     });
@@ -369,9 +354,9 @@
         document.body.scrollTop = document.documentElement.scrollTop = 0;
     });
     
-    // Busca o ROLE e redireciona 
+    // Busca o ROLE e redireciona (Reutilizável para login e verificação de sessão)
     async function fetchUserRole(userId) {
-        try { 
+        try { // Bloco Try/Catch para capturar erro de API Key incorreta
             const { data: userData, error: userError } = await supabaseClient
                 .from('users')
                 .select('role, username')
@@ -390,12 +375,13 @@
                 return;
             }
             
+            // Atualiza o objeto global currentUser
             currentUser = session.user; 
             currentUser.user_metadata = { role: userData.role, username: userData.username };
             showDashboard(userData.role);
 
         } catch (e) {
-            console.error("Erro fatal ao tentar buscar o perfil:", e);
+            console.error("Erro fatal ao tentar buscar o perfil (Provavelmente API Key ou RLS):", e);
             alert('Erro de conexão ou autenticação. Por favor, verifique a CHAVE API (anon public) e a URL no código.');
             await supabaseClient.auth.signOut();
         }
@@ -428,6 +414,7 @@
 
     async function loadClientDashboard() {
         loadClientTickets();
+        // Preenche o campo de solicitante automaticamente
         if (currentUser && currentUser.user_metadata.username) {
              document.getElementById('requesterName').value = currentUser.user_metadata.username;
         }
@@ -463,7 +450,8 @@
             const statusBadge = getStatusBadge(ticket.status);
             
             let actions = '';
-            
+            // Os IDs precisam de aspas simples ('${ticket.id}') no onclick, pois são strings (UUIDs)
+
             if (ticket.status === 'open') {
                 actions += `<button onclick="startTicket('${ticket.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm mr-2">Iniciar</button>`;
             }
@@ -473,7 +461,7 @@
                 actions += `<button onclick="openCloseTicketModal('${ticket.id}', '${ticket.protocol}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
             
-            // Botão PDF Individual
+            // Botão PDF Individual (mantido para compatibilidade)
             actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
@@ -497,7 +485,7 @@
         });
     }
 
-    // Carregamento de tickets do Cliente
+    // Carregamento de tickets do Cliente (Implementação básica)
     async function loadClientTickets() {
         if (!currentUser || !currentUser.id) return;
 
@@ -520,6 +508,7 @@
             return;
         }
 
+        // Lógica de exibição simples para o cliente
         tickets.forEach(ticket => {
              const statusColor = ticket.status === 'closed' ? 'bg-green-100 text-green-800' : (ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800');
              
@@ -543,7 +532,8 @@
         });
     }
 
-    // Funções de Ação do Ticket (startTicket, deleteTicket)
+
+    // Funções de Ação do Ticket
     async function startTicket(ticketId) {
         if (!confirm('Iniciar este chamado?')) return;
         const { error } = await supabaseClient
@@ -559,13 +549,15 @@
         }
     }
     
+    // Função para abrir o modal de encerramento
     function openCloseTicketModal(ticketId, protocol) {
         document.getElementById('currentTicketId').value = ticketId;
         document.getElementById('closingProtocol').textContent = protocol;
         closeTicketModal.classList.remove('hidden');
     }
-    window.openCloseTicketModal = openCloseTicketModal; 
+    window.openCloseTicketModal = openCloseTicketModal; // Torna global para o onclick
     
+    // Lógica de Encerramento (agora no submit do modal)
     document.getElementById('closeTicketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -577,7 +569,7 @@
             .update({ 
                 status: 'closed', 
                 closed_at: new Date().toISOString(),
-                service_details: serviceDetails 
+                service_details: serviceDetails // SALVA A DESCRIÇÃO E VALOR AQUI
             })
             .eq('id', ticketId);
 
@@ -595,7 +587,7 @@
     async function deleteTicket(ticketId) {
         if (!confirm('Tem certeza que deseja excluir este chamado?')) return;
         
-        // Lógica para deletar o arquivo anexo no Storage (deixada para futura implementação)
+        // 🛑 Lógica para deletar o arquivo anexo no Storage (deixada para futura implementação)
         
         const { error } = await supabaseClient
             .from('tickets')
@@ -610,75 +602,22 @@
         }
     }
     
+    // TORNA AS FUNÇÕES DE AÇÃO GLOBAIS PARA QUE O ONCLICK FUNCIONE NA TABELA
     window.startTicket = startTicket;
-    window.deleteTicket = deleteTicket; 
-    
+    window.deleteTicket = deleteTicket; // closeTicket foi substituído por openCloseTicketModal
     // ------------------------------------------------------------------
-    // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS (Incluindo Novo Fluxo de Relatório)
+    // 3. FUNÇÕES DE MODAIS E FORMULÁRIOS
     // ------------------------------------------------------------------
-
-    // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de seleção)
-    async function buscarTicketsUltimos30Dias() {
-        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-        const { data: tickets, error } = await supabaseClient
-            .from('tickets')
-            .select('*')
-            .gte('created_at', trintaDiasAtras) // Filtra por data
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            alert('Erro ao buscar tickets para o relatório: ' + error.message);
-            return [];
-        }
-        return tickets;
-    }
-
-    // Função para abrir o modal de seleção
-    async function openTicketSelectionModal() {
-        const selectionList = document.getElementById('ticketSelectionList');
-        selectionList.innerHTML = '<p class="text-center text-blue-500">Buscando chamados...</p>';
-        
-        const tickets = await buscarTicketsUltimos30Dias();
-        cachedTickets = tickets; // Armazena em cache
-        
-        selectionList.innerHTML = '';
-        if (tickets.length === 0) {
-             selectionList.innerHTML = '<p class="text-center text-gray-500">Nenhum chamado dos últimos 30 dias encontrado.</p>';
-        } else {
-            tickets.forEach(ticket => {
-                const statusColor = ticket.status === 'closed' ? 'bg-green-500' : (ticket.status === 'open' ? 'bg-yellow-500' : 'bg-blue-500');
-                const statusText = ticket.status.toUpperCase().replace('_', ' ');
-
-                const item = document.createElement('div');
-                item.className = 'flex items-start p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600';
-                item.innerHTML = `
-                    <input type="checkbox" id="ticket-${ticket.id}" data-id="${ticket.id}" 
-                           class="mt-1 mr-3 h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500" checked>
-                    <label for="ticket-${ticket.id}" class="flex-1 cursor-pointer">
-                        <p class="font-semibold text-gray-900 dark:text-white">${ticket.protocol} - ${ticket.requester}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-300 truncate max-w-lg">${ticket.description}</p>
-                        <span class="text-xs text-white px-2 py-0.5 rounded ${statusColor}">${statusText}</span>
-                    </label>
-                `;
-                selectionList.appendChild(item);
-            });
-        }
-        
-        reportModal.classList.remove('hidden');
-    }
-    
-    generateReportBtn.addEventListener('click', openTicketSelectionModal);
-    cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
-    confirmGeneratePDF.addEventListener('click', generateSelectedTicketsPDF); // Chama a função principal de Geração em Lote
 
     // FUNÇÃO CRIAR USUÁRIO 
     document.getElementById('createUserForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        
         const newUsername = document.getElementById('newUsername').value;
         const newEmail = document.getElementById('newEmail').value; 
         const newPassword = document.getElementById('newPassword').value;
 
+        // 1. Criar o Usuário no Supabase AUTH
         const { data: authData, error: authError } = await supabaseClient.auth.signUp({
             email: newEmail,
             password: newPassword,
@@ -689,6 +628,7 @@
             return;
         }
 
+        // 2. Inserir o Perfil (Role) na Tabela 'users'
         const newUserId = authData.user.id;
         
         const { error: userInsertError } = await supabaseClient
@@ -696,7 +636,7 @@
             .insert({
                 id: newUserId,
                 username: newUsername,
-                role: 'client' 
+                role: 'client' // Define o papel como cliente
             });
 
         if (userInsertError) {
@@ -708,10 +648,10 @@
 
         document.getElementById('createUserModal').classList.add('hidden');
         document.getElementById('createUserForm').reset();
-        loadAdminDashboard(); 
+        loadAdminDashboard(); // Atualiza a contagem de usuários
     });
 
-    // FUNÇÃO ABRIR NOVO CHAMADO
+    // FUNÇÃO ABRIR NOVO CHAMADO (ATUALIZADA PARA UPLOAD)
     document.getElementById('newTicketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -728,14 +668,17 @@
         let attachmentUrl = null;
         const protocol = 'TICKET-' + Date.now().toString().slice(-8) + Math.random().toString(36).substring(2, 6).toUpperCase();
 
+        // 1. UPLOAD DO ARQUIVO PARA O SUPABASE STORAGE (SE HOUVER ARQUIVO)
         if (file) {
+            // Verifica o tamanho do arquivo (limite de 5MB)
             const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
             if (file.size > MAX_FILE_SIZE_BYTES) {
                  alert('O arquivo excede o limite de 5MB. Por favor, selecione um arquivo menor.');
                  return;
             }
 
-            const fileExt = file.name.split('.').pop(); // CORRIGIDO: Removido o '.pop()' duplo
+            // Gera um caminho único: client_user_id/protocolo-timestamp.ext
+            const fileExt = file.name.split('.').pop();
             const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
             const bucketName = 'ticket_attachments'; 
             
@@ -751,6 +694,7 @@
                     throw uploadError;
                 }
                 
+                // 2. Obtém a URL pública do arquivo
                 const { data: publicUrlData } = supabaseClient.storage
                     .from(bucketName)
                     .getPublicUrl(filePath);
@@ -764,19 +708,21 @@
             }
         }
 
+        // 3. INSERÇÃO DO NOVO CHAMADO NO BANCO DE DADOS
         const { error: insertError } = await supabaseClient
             .from('tickets')
             .insert({
                 protocol: protocol,
                 requester: requesterName,
                 description: description,
-                attachment_url: attachmentUrl, 
+                attachment_url: attachmentUrl, // Insere a URL ou NULL
                 user_id: currentUser.id,
                 status: 'open'
             });
 
         if (insertError) {
             alert(`Erro ao abrir chamado: ${insertError.message}`);
+            // Se falhar a inserção, você deve tentar deletar o arquivo do storage
             return;
         }
 
@@ -784,7 +730,7 @@
 
         document.getElementById('newTicketModal').classList.add('hidden');
         document.getElementById('newTicketForm').reset();
-        loadClientDashboard(); 
+        loadClientDashboard(); // Atualiza a lista de chamados do cliente
     });
 
 
@@ -793,13 +739,38 @@
     document.getElementById('cancelCreateUser').addEventListener('click', () => createUserModal.classList.add('hidden'));
     document.getElementById('newTicketBtn').addEventListener('click', () => newTicketModal.classList.remove('hidden'));
     document.getElementById('cancelNewTicket').addEventListener('click', () => newTicketModal.classList.add('hidden'));
+    
+    // Controle do Modal de Fechamento de Chamado
     document.getElementById('cancelCloseTicket').addEventListener('click', () => closeTicketModal.classList.add('hidden'));
     
+    // Funções de controle do modal de relatório
+    generateReportBtn.addEventListener('click', () => reportModal.classList.remove('hidden'));
+    cancelReport.addEventListener('click', () => reportModal.classList.add('hidden'));
+    confirmGeneratePDF.addEventListener('click', gerarRelatorioPDFLote);
+
+
     // ------------------------------------------------------------------
-    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS DEFINITIVAMENTE PARA BRANCO E LÓGICA DE LOTE)
+    // 4. FUNÇÕES DE RELATÓRIO PDF (CORRIGIDAS E MELHORADAS)
     // ------------------------------------------------------------------
+
+    // Auxiliar para buscar tickets nos últimos 30 dias (Usado na função de lote)
+    async function buscarTicketsUltimos30Dias() {
+        const trintaDiasAtras = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data: tickets, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .gte('created_at', trintaDiasAtras) // Filtra por data
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            alert('Erro ao buscar tickets para o relatório: ' + error.message);
+            return null;
+        }
+        return tickets;
+    }
     
-    // Geração de PDF Individual (Mantida apenas para o botão "PDF" da tabela)
+    // Geração de PDF Individual (AGORA COM ESPAÇO MAIOR PARA ASSINATURA)
     async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
@@ -815,231 +786,178 @@
         const statusText = ticket.status.toUpperCase().replace('_', ' ');
         const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
         
+        // Formata a descrição do serviço para o PDF
         const serviceDetailsHtml = ticket.service_details 
             ? `
                 <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
-                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe; color: #1a202c;">
+                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe;">
                     ${ticket.service_details.replace(/\n/g, '<br>')}
                 </div>
               `
-            : '<p style="margin-top: 20px; color: #1a202c;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+            : '<p style="margin-top: 20px;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
 
 
-        // 1. Cria o elemento div com o conteúdo
         const content = document.createElement('div');
-        content.className = 'pdf-content-wrapper'; // Aplica o estilo crítico
-        content.style.pageBreakAfter = 'auto'; // Garante quebra apenas na versão em lote
+        content.style.padding = '20px';
+        content.style.fontFamily = 'Arial, sans-serif';
         content.innerHTML = `
             <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
                 <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em;">Protocolo: ${ticket.protocol}</p>
             </div>
-            <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
-            <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
-            <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
+            <p><strong>Solicitante:</strong> ${ticket.requester}</p>
+            <p><strong>Aberto em:</strong> ${dateCreated}</p>
+            <p><strong>Status:</strong> ${statusText}</p>
             
-            <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
-            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
+            <p style="font-weight: bold; margin-top: 20px;">DESCRIÇÃO DO PROBLEMA:</p>
+            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9;">
                 ${ticket.description.replace(/\n/g, '<br>')}
             </div>
 
             ${serviceDetailsHtml}
 
-            <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
+            <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
             
-            <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
+            <div style="margin-top: 80px; text-align: center; padding-top: 20px;">
                 <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
-                <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
+                <p style="font-size: 0.9em; margin-top: 5px;">Assinatura (T.I. e Cliente/Gestor)</p>
                 <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
             </div>
         `;
 
-        // 2. CRÍTICO: Adiciona à página fora da tela para garantir a renderização
-        const tempElement = document.createElement('div');
-        tempElement.appendChild(content);
-        tempElement.style.position = 'absolute';
-        tempElement.style.top = '0';
-        tempElement.style.left = '-9999px';
-        tempElement.style.width = '210mm'; 
-        document.body.appendChild(tempElement); 
-        
-        // 3. CRÍTICO: Pausa forçada de 50ms para renderização
-        await new Promise(resolve => setTimeout(resolve, 50)); 
-        
         const options = {
             margin: 10,
             filename: `${ticket.protocol}.pdf`,
-            html2canvas: { 
-                scale: 2, 
-                letterRendering: true, 
-                backgroundColor: '#ffffff'
-            }, 
+            html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 4. Gera o PDF e remove o elemento temporário
-        html2pdf().from(tempElement).set(options).save().then(() => {
-            document.body.removeChild(tempElement); 
-        }).catch(err => {
-             if (document.body.contains(tempElement)) {
-                document.body.removeChild(tempElement);
-             }
-             console.error("Erro ao gerar PDF:", err);
-             alert("Ocorreu um erro ao gerar o PDF. Verifique o console.");
-        });
+        html2pdf().from(content).set(options).save();
     }
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // FUNÇÃO PRINCIPAL: Gera um único PDF contendo múltiplos relatórios de tickets selecionados
-    async function generateSelectedTicketsPDF() {
+    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA
+    async function gerarRelatorioPDFLote() {
         
+        // 1. CAPTURA O VALOR DIGITADO NO MODAL
         const totalValue = document.getElementById('totalValueReport').value.trim(); 
         
-        // **CORREÇÃO CRÍTICA AQUI:** Buscamos todos os inputs do tipo checkbox dentro da lista
-        const selectedCheckboxes = document.querySelectorAll('#ticketSelectionList input[type="checkbox"]:checked');
+        reportModal.classList.add('hidden');
         
-        if (selectedCheckboxes.length === 0) {
-            alert('Por favor, selecione pelo menos um chamado para gerar o relatório.');
+        const tickets = await buscarTicketsUltimos30Dias();
+
+        if (!tickets) {
             return;
         }
 
-        // Mapeia os IDs selecionados
-        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
-        
-        // Filtra os tickets do cache. CRÍTICO: cachedTickets deve ter sido populado
-        if (cachedTickets.length === 0) {
-             alert('Erro interno: A lista de chamados disponíveis está vazia. Tente reabrir o modal.');
-             return;
+        if (tickets.length === 0) {
+            alert('Nenhum chamado encontrado nos últimos 30 dias para gerar o relatório.');
+            return;
         }
         
-        const ticketsToGenerate = cachedTickets.filter(ticket => selectedIds.includes(ticket.id));
-        
-        if (ticketsToGenerate.length === 0) {
-             alert('Nenhum ticket válido encontrado entre os selecionados. Tente reabrir o modal.');
-             return;
-        }
-
-        reportModal.classList.add('hidden');
-        
-        const contentWrapper = document.createElement('div');
-        contentWrapper.style.backgroundColor = '#ffffff'; 
-        contentWrapper.style.color = '#1a202c'; 
-
-        // 1. Adiciona um cabeçalho consolidado, opcional
-        if (totalValue || ticketsToGenerate.length > 0) {
-            let consolidatedHeader = `
-                <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                    <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
-                        <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO DE SERVIÇOS T.I.</h1>
-                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Total de Chamados Selecionados: ${ticketsToGenerate.length}</p>
-                    </div>
-            `;
-            if (totalValue) {
-                 consolidatedHeader += `
-                    <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid; color: #1a202c;">
-                        <h4 style="font-size: 1.2em; color: #065f46; margin: 0;">VALOR TOTAL DE SERVIÇOS NO PERÍODO:</h4>
-                        <p style="font-size: 1.5em; font-weight: bold; color: #065f46; margin-top: 5px;">${totalValue}</p>
-                    </div>
-                 `;
-            }
-            consolidatedHeader += `
-                <p style="margin-top: 30px; font-style: italic; color: #4b5563;">Os relatórios individuais detalhados seguem nas próximas páginas.</p>
+        // 2. CRIA O HTML DO VALOR TOTAL (SE HOUVER VALOR)
+        let totalValueHtml = '';
+        if (totalValue) {
+            totalValueHtml = `
+                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid;">
+                    <h4 style="font-size: 1.2em; color: #065f46; margin: 0;">VALOR TOTAL DE SERVIÇOS (30 DIAS):</h4>
+                    <p style="font-size: 1.5em; font-weight: bold; color: #065f46; margin-top: 5px;">${totalValue}</p>
                 </div>
             `;
-            contentWrapper.innerHTML += consolidatedHeader;
         }
 
 
-        // 2. Concatena os relatórios de tickets (um por página)
-        ticketsToGenerate.forEach(ticket => {
-             // Replicamos a lógica de formatação de relatório individual aqui
-             const statusText = ticket.status.toUpperCase().replace('_', ' ');
-             const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
-             
-             const serviceDetailsHtml = ticket.service_details 
-                 ? `
-                     <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
-                     <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe; color: #1a202c;">
-                         ${ticket.service_details.replace(/\n/g, '<br>')}
-                     </div>
-                   `
-                 : '<p style="margin-top: 20px; color: #1a202c;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+        // 3. Cria o conteúdo HTML do relatório consolidado
+        const content = document.createElement('div');
+        content.style.padding = '20px';
+        content.style.fontFamily = 'Arial, sans-serif';
+        content.style.color = '#1f2937'; 
+        
+        content.innerHTML = `
+            <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO CONSOLIDADO DE CHAMADOS</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563;">CNPJ: 54.677.769/0001-78</p>
+            </div>
 
-            contentWrapper.innerHTML += `
-                <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                    <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
-                        <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
-                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
-                    </div>
-                    <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
-                    <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
-                    <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
-                    
-                    <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
-                    <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
-                        ${ticket.description.replace(/\n/g, '<br>')}
-                    </div>
+            <h2 style="text-align: center; font-size: 1.2em; margin-top: 5px; color: #4b5563;">
+                Últimos 30 Dias (Total: ${tickets.length} Chamados)
+            </h2>
+            <p style="text-align: right; font-size: 0.8em; color: #6b7280;">Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+        `;
+        
+        // 4. Itera sobre os tickets e adiciona ao conteúdo
+        tickets.forEach((ticket, index) => {
+            const statusColor = ticket.status === 'closed' ? '#10b981' : (ticket.status === 'open' ? '#f59e0b' : '#3b82f6');
+            const statusText = ticket.status.toUpperCase().replace('_', ' ');
+            const ticketDescription = ticket.description ? ticket.description.substring(0, 150) + (ticket.description.length > 150 ? '...' : '') : 'N/A';
+            const requesterName = ticket.requester || 'N/A';
+            const createdAtDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : 'N/A';
+            
+            // Inclui a informação do serviço no relatório consolidado
+            const serviceSummary = ticket.service_details 
+                ? `<p style="margin: 2px 0; color: #3b82f6;"><strong>Serviço:</strong> ${ticket.service_details.split('\n')[0].substring(0, 50)}...</p>`
+                : `<p style="margin: 2px 0; color: #6b7280;"><strong>Serviço:</strong> Não informado</p>`;
 
-                    ${serviceDetailsHtml}
 
-                    <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
-                    
-                    <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
-                        <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
-                        <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
-                        <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
+            const ticketHtml = `
+                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <p style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
+                        ${index + 1}. Protocolo: ${ticket.protocol} 
+                        <span style="float: right; font-weight: normal; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${statusText}</span>
+                    </p>
+                    <div style="font-size: 0.9em; line-height: 1.5;">
+                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
+                        <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
+                        <p style="margin: 2px 0;"><strong>Descrição do Problema:</strong> ${ticketDescription}</p>
+                        ${serviceSummary} 
                     </div>
                 </div>
             `;
+            content.innerHTML += ticketHtml;
         });
 
-        // CRÍTICO: Cria o elemento temporário para a renderização do PDF
-        const tempElement = document.createElement('div');
-        tempElement.appendChild(contentWrapper);
-        
-        // Ocultação robusta (fora da tela, mas visível para o navegador renderizar)
-        tempElement.style.position = 'absolute';
-        tempElement.style.top = '0';
-        tempElement.style.left = '-9999px';
-        tempElement.style.width = '210mm'; // Garante largura A4
-        
-        document.body.appendChild(tempElement); 
-        
-        // ***** CRÍTICO: CORREÇÃO DE TIMING: Adiciona um pequeno atraso (50ms) para renderização *****
-        await new Promise(resolve => setTimeout(resolve, 50)); 
-        // **********************************************************************************
+        // 5. Adiciona o VALOR TOTAL e a seção de rodapé e assinatura
+        content.innerHTML += `
+            ${totalValueHtml} <div style="margin-top: 60px; padding-top: 20px; border-top: 1px dashed #9ca3af; page-break-before: auto;">
+                <p style="text-align: center; font-style: italic; color: #4b5563; margin-bottom: 40px; font-size: 0.9em;">
+                    Este relatório consolida a atividade de chamados de T.I. no período.
+                </p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-top: 50px;">
+                    <tr>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
+                        </td>
+                        <td style="width: 50%; text-align: center; padding: 0 10px;">
+                            <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
+                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
+                        </td>
+                    </tr>
+                </table>
+                <div style="text-align: center; margin-top: 30px; font-size: 0.75em; color: #9ca3af;">
+                    <p>Documento gerado eletronicamente.</p>
+                </div>
+            </div>
+        `;
 
-        // Opções do PDF
+        // 6. Gera e salva o PDF
         const options = {
             margin: 10,
-            filename: `Relatorio_Personalizado_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
+            filename: `Relatorio_30Dias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                letterRendering: true, 
-                // CRÍTICO: Configuração para forçar fundo branco
-                backgroundColor: '#ffffff'
-            }, 
+            html2canvas: { scale: 2 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // 3. Gera e salva o PDF
-        html2pdf().from(tempElement).set(options).save().then(() => {
-            // 4. Remove o elemento temporário após a geração
-            document.body.removeChild(tempElement); 
-            alert(`Relatório com ${ticketsToGenerate.length} chamados gerado com sucesso!`);
-            // Limpa o formulário de relatório
-            document.getElementById('totalValueReport').value = '';
-        }).catch(err => {
-             // Garante que o elemento é removido mesmo em caso de erro
-             if (document.body.contains(tempElement)) {
-                document.body.removeChild(tempElement);
-             }
-             console.error("Erro ao gerar PDF:", err);
-             alert("Ocorreu um erro ao gerar o PDF. Verifique o console. Possívelmente um erro na leitura de imagens externas (CORS).");
-        });
+        html2pdf().from(content).set(options).save();
+        alert('Relatório consolidado gerado com sucesso!');
     }
+    
+    // TORNA A FUNÇÃO DE GERAÇÃO EM LOTE GLOBA L
+    window.gerarRelatorioPDFLote = gerarRelatorioPDFLote;
+
 
     // ------------------------------------------------------------------
     // 5. FUNÇÃO DE ALTERNAR TEMA
