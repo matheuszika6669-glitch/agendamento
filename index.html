@@ -770,7 +770,7 @@
         return tickets;
     }
     
-    // Geração de PDF Individual (AGORA COM ESPAÇO MAIOR PARA ASSINATURA)
+    // Geração de PDF Individual (CORRIGIDO PARA LEGIBILIDADE E MODO CLARO)
     async function generateTicketPDF(ticketId) {
         const { data: ticket, error } = await supabaseClient
             .from('tickets')
@@ -790,54 +790,68 @@
         const serviceDetailsHtml = ticket.service_details 
             ? `
                 <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
-                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe;">
+                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe; color: #1a202c;">
                     ${ticket.service_details.replace(/\n/g, '<br>')}
                 </div>
               `
-            : '<p style="margin-top: 20px;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+            : '<p style="margin-top: 20px; color: #1a202c;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+        
+        // Conteúdo HTML com estilos forçando fundo branco e texto escuro
+        const htmlContent = `
+            <div style="background-color: #ffffff; color: #1a202c; padding: 20px; font-family: Arial, sans-serif;">
+                <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
+                </div>
+                <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+                <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
+                <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
+                
+                <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
+                <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
+                    ${ticket.description.replace(/\n/g, '<br>')}
+                </div>
 
+                ${serviceDetailsHtml}
 
-        const content = document.createElement('div');
-        content.style.padding = '20px';
-        content.style.fontFamily = 'Arial, sans-serif';
-        content.innerHTML = `
-            <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
-                <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em;">Protocolo: ${ticket.protocol}</p>
-            </div>
-            <p><strong>Solicitante:</strong> ${ticket.requester}</p>
-            <p><strong>Aberto em:</strong> ${dateCreated}</p>
-            <p><strong>Status:</strong> ${statusText}</p>
-            
-            <p style="font-weight: bold; margin-top: 20px;">DESCRIÇÃO DO PROBLEMA:</p>
-            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9;">
-                ${ticket.description.replace(/\n/g, '<br>')}
-            </div>
-
-            ${serviceDetailsHtml}
-
-            <p style="margin-top: 15px;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank">Ver Anexo</a>` : 'Não'}</p>
-            
-            <div style="margin-top: 80px; text-align: center; padding-top: 20px;">
-                <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
-                <p style="font-size: 0.9em; margin-top: 5px;">Assinatura (T.I. e Cliente/Gestor)</p>
-                <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
+                <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
+                
+                <div style="margin-top: 80px; text-align: center; padding-top: 20px;">
+                    <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
+                    <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
+                    <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
+                </div>
             </div>
         `;
 
+        // Cria um elemento temporário para garantir que o html2pdf capture os estilos corrigidos
+        const tempElement = document.createElement('div');
+        tempElement.innerHTML = htmlContent;
+        // Oculta o elemento da tela
+        tempElement.style.position = 'absolute';
+        tempElement.style.left = '-9999px';
+        document.body.appendChild(tempElement);
+        
         const options = {
             margin: 10,
             filename: `${ticket.protocol}.pdf`,
-            html2canvas: { scale: 2 },
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, // Mantém a escala para boa resolução
+                letterRendering: true // CORREÇÃO: Melhora o renderização de texto
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        html2pdf().from(content).set(options).save();
+        html2pdf().from(tempElement).set(options).save().then(() => {
+            // Remove o elemento temporário após a geração
+            document.body.removeChild(tempElement);
+        });
     }
     window.generateTicketPDF = generateTicketPDF;
 
 
-    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA
+    // FUNÇÃO DE GERAÇÃO EM LOTE - ATUALIZADA COM VALOR TOTAL E ESPAÇO MAIOR PARA ASSINATURA (CORRIGIDO PARA MODO CLARO)
     async function gerarRelatorioPDFLote() {
         
         // 1. CAPTURA O VALOR DIGITADO NO MODAL
@@ -873,6 +887,7 @@
         content.style.padding = '20px';
         content.style.fontFamily = 'Arial, sans-serif';
         content.style.color = '#1f2937'; 
+        content.style.backgroundColor = '#ffffff'; // CORREÇÃO: Força o fundo branco
         
         content.innerHTML = `
             <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px;">
@@ -906,8 +921,7 @@
                         ${index + 1}. Protocolo: ${ticket.protocol} 
                         <span style="float: right; font-weight: normal; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${statusText}</span>
                     </p>
-                    <div style="font-size: 0.9em; line-height: 1.5;">
-                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
+                    <div style="font-size: 0.9em; line-height: 1.5; color: #1f2937;"> <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
                         <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
                         <p style="margin: 2px 0;"><strong>Descrição do Problema:</strong> ${ticketDescription}</p>
                         ${serviceSummary} 
@@ -928,11 +942,11 @@
                     <tr>
                         <td style="width: 50%; text-align: center; padding: 0 10px;">
                             <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Responsável T.I.</p>
+                            <p style="margin-top: 5px; font-size: 0.9em; color: #1f2937;">Assinatura do Responsável T.I.</p>
                         </td>
                         <td style="width: 50%; text-align: center; padding: 0 10px;">
                             <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 5px; font-size: 0.9em;">Assinatura do Cliente/Gestor</p>
+                            <p style="margin-top: 5px; font-size: 0.9em; color: #1f2937;">Assinatura do Cliente/Gestor</p>
                         </td>
                     </tr>
                 </table>
@@ -947,7 +961,7 @@
             margin: 10,
             filename: `Relatorio_30Dias_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
+            html2canvas: { scale: 2, letterRendering: true }, // CORREÇÃO: Adiciona letterRendering para melhor texto
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
