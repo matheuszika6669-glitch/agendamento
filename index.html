@@ -22,13 +22,16 @@
             padding-bottom: 8px;
         }
         
-        /* Estilos CSS CRÍTICOS para o PDF: Força o fundo branco e texto escuro para o html2canvas */
+        /* Estilos CSS CRÍTICOS para o PDF: Força o fundo branco e texto preto */
         .pdf-content-wrapper {
             background-color: #ffffff !important; 
-            color: #1a202c !important; /* Força cor do texto principal para preto */
+            color: #000000 !important; /* Força cor do texto principal para PRETO */
             padding: 20px;
             font-family: Arial, sans-serif;
-            page-break-after: always; /* Garante quebra de página entre relatórios */
+            page-break-after: always; 
+        }
+        .pdf-content-wrapper p, .pdf-content-wrapper strong {
+             color: #000000 !important; /* Garante que parágrafos e negritos sejam pretos */
         }
     </style>
 </head>
@@ -649,11 +652,11 @@
         const serviceDetailsHtml = ticket.service_details 
             ? `
                 <p style="font-weight: bold; margin-top: 20px; color: #3b82f6 !important;">SERVIÇO REALIZADO E VALOR:</p>
-                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe !important; color: #1a202c !important;">
+                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe !important; color: #000000 !important;">
                     ${ticket.service_details.replace(/\n/g, '<br>')}
                 </div>
               `
-            : '<p style="margin-top: 20px; color: #1a202c !important;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+            : '<p style="margin-top: 20px; color: #000000 !important;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
 
 
         // 1. Cria o elemento div com o conteúdo
@@ -663,31 +666,34 @@
         content.innerHTML = `
             <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
                 <h1 style="color: #3b82f6 !important; margin: 0;">Relatório do Chamado T.I</h1>
-                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c !important;">Protocolo: ${ticket.protocol}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #000000 !important;">Protocolo: ${ticket.protocol}</p>
             </div>
-            <p style="color: #1a202c !important;"><strong>Solicitante:</strong> ${ticket.requester}</p>
-            <p style="color: #1a202c !important;"><strong>Aberto em:</strong> ${dateCreated}</p>
-            <p style="color: #1a202c !important;"><strong>Status:</strong> ${statusText}</p>
+            <p style="color: #000000 !important;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+            <p style="color: #000000 !important;"><strong>Aberto em:</strong> ${dateCreated}</p>
+            <p style="color: #000000 !important;"><strong>Status:</strong> ${statusText}</p>
             
-            <p style="font-weight: bold; margin-top: 20px; color: #1a202c !important;">DESCRIÇÃO DO PROBLEMA:</p>
-            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9 !important; color: #1a202c !important;">
+            <p style="font-weight: bold; margin-top: 20px; color: #000000 !important;">DESCRIÇÃO DO PROBLEMA:</p>
+            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9 !important; color: #000000 !important;">
                 ${ticket.description.replace(/\n/g, '<br>')}
             </div>
 
             ${serviceDetailsHtml}
 
-            <p style="margin-top: 15px; color: #1a202c !important;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6 !important;">Ver Anexo</a>` : 'Não'}</p>
+            <p style="margin-top: 15px; color: #000000 !important;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6 !important;">Ver Anexo</a>` : 'Não'}</p>
             
             <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
-                <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
-                <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c !important;">Assinatura (T.I. e Cliente/Gestor)</p>
+                <div style="width: 300px; height: 1px; border-top: 1px solid #000000 !important; margin: 30px auto 5px auto;"></div> 
+                <p style="font-size: 0.9em; margin-top: 5px; color: #000000 !important;">Assinatura (T.I. e Cliente/Gestor)</p>
                 <p style="font-size: 0.8em; color: #6b7280 !important;">Espaço ampliado para inserção digital após download.</p>
             </div>
         `;
 
-        // 2. CRÍTICO: Adiciona à página fora da tela para garantir a renderização
+        // 2. CRÍTICO: Adiciona à página fora da tela com estilos de forçagem global
         const tempElement = document.createElement('div');
         tempElement.appendChild(content);
+        // FORÇA FUNDO BRANCO E TEXTO PRETO NO ELEMENTO PAI ANTES DA CAPTURA
+        tempElement.style.backgroundColor = '#ffffff';
+        tempElement.style.color = '#000000';
         tempElement.style.position = 'absolute';
         tempElement.style.top = '0';
         tempElement.style.left = '-9999px';
@@ -703,7 +709,7 @@
             html2canvas: { 
                 scale: 2, 
                 letterRendering: true, 
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff' // Repetindo a cor do fundo aqui
             }, 
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
@@ -750,21 +756,21 @@
         // 1. Cria o Wrapper principal do PDF
         const contentWrapper = document.createElement('div');
         contentWrapper.style.backgroundColor = '#ffffff'; 
-        contentWrapper.style.color = '#1a202c'; 
+        contentWrapper.style.color = '#000000'; // Forçando preto
 
         // 2. CRIA A PRIMEIRA PÁGINA: CABEÇALHO CONSOLIDADO (Contém CNPJ/Nome e Valor Total)
         let consolidatedHeader = `
             <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; color: #1a202c !important;">
+                <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; color: #000000 !important;">
                     <h1 style="color: #3b82f6 !important; margin: 0; font-size: 1.8em;">RELATÓRIO DE SERVIÇOS T.I.</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #4b5563 !important;">${companyInfo}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563 !important;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Total de Chamados: ${tickets.length}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #000000 !important;">${companyInfo}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #000000 !important;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Total de Chamados: ${tickets.length}</p>
                 </div>
         `;
         
         if (totalValue) {
             consolidatedHeader += `
-                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5 !important; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid; color: #1a202c !important;">
+                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5 !important; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid; color: #000000 !important;">
                     <h4 style="font-size: 1.2em; color: #065f46 !important; margin: 0;">VALOR TOTAL DE SERVIÇOS NO PERÍODO:</h4>
                     <p style="font-size: 1.5em; font-weight: bold; color: #065f46 !important; margin-top: 5px;">${totalValue}</p>
                 </div>
@@ -774,7 +780,7 @@
         }
         
         consolidatedHeader += `
-            <p style="margin-top: 30px; font-style: italic; color: #4b5563 !important;">Os relatórios individuais detalhados seguem nas próximas páginas.</p>
+            <p style="margin-top: 30px; font-style: italic; color: #000000 !important;">Os relatórios individuais detalhados seguem nas próximas páginas.</p>
             </div>
         `;
         contentWrapper.innerHTML += consolidatedHeader;
@@ -788,44 +794,47 @@
              const serviceDetailsHtml = ticket.service_details 
                  ? `
                      <p style="font-weight: bold; margin-top: 20px; color: #3b82f6 !important;">SERVIÇO REALIZADO E VALOR:</p>
-                     <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe !important; color: #1a202c !important;">
+                     <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe !important; color: #000000 !important;">
                          ${ticket.service_details.replace(/\n/g, '<br>')}
                      </div>
                    `
-                 : '<p style="margin-top: 20px; color: #1a202c !important;"><strong>Serviço/Valor:</strong> Não Informado.</p>';
+                 : '<p style="margin-top: 20px; color: #000000 !important;"><strong>Serviço/Valor:</strong> Não Informado.</p>';
 
             contentWrapper.innerHTML += `
                 <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                    <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; color: #1a202c !important;">
+                    <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; color: #000000 !important;">
                         <h1 style="color: #3b82f6 !important; margin: 0;">Relatório do Chamado T.I</h1>
-                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c !important;">Protocolo: ${ticket.protocol}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #000000 !important;">Protocolo: ${ticket.protocol}</p>
                     </div>
-                    <p style="color: #1a202c !important;"><strong>Solicitante:</strong> ${ticket.requester}</p>
-                    <p style="color: #1a202c !important;"><strong>Aberto em:</strong> ${dateCreated}</p>
-                    <p style="color: #1a202c !important;"><strong>Status:</strong> ${statusText}</p>
+                    <p style="color: #000000 !important;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+                    <p style="color: #000000 !important;"><strong>Aberto em:</strong> ${dateCreated}</p>
+                    <p style="color: #000000 !important;"><strong>Status:</strong> ${statusText}</p>
                     
-                    <p style="font-weight: bold; margin-top: 20px; color: #1a202c !important;">DESCRIÇÃO DO PROBLEMA:</p>
-                    <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9 !important; color: #1a202c !important;">
+                    <p style="font-weight: bold; margin-top: 20px; color: #000000 !important;">DESCRIÇÃO DO PROBLEMA:</p>
+                    <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9 !important; color: #000000 !important;">
                         ${ticket.description.replace(/\n/g, '<br>')}
                     </div>
 
                     ${serviceDetailsHtml}
 
-                    <p style="margin-top: 15px; color: #1a202c !important;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6 !important;">Ver Anexo</a>` : 'Não'}</p>
+                    <p style="margin-top: 15px; color: #000000 !important;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6 !important;">Ver Anexo</a>` : 'Não'}</p>
                     
                     <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
-                        <div style="width: 300px; height: 1px; border-top: 1px solid #000 !important; margin: 30px auto 5px auto;"></div> 
-                        <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c !important;">Assinatura (T.I. e Cliente/Gestor)</p>
+                        <div style="width: 300px; height: 1px; border-top: 1px solid #000000 !important; margin: 30px auto 5px auto;"></div> 
+                        <p style="font-size: 0.9em; margin-top: 5px; color: #000000 !important;">Assinatura (T.I. e Cliente/Gestor)</p>
                         <p style="font-size: 0.8em; color: #6b7280 !important;">Espaço ampliado para inserção digital após download.</p>
                     </div>
                 </div>
             `;
         });
 
-        // 4. CRÍTICO: Cria o elemento temporário para a renderização do PDF
+        // 4. CRÍTICO: Cria o elemento temporário e APLICA ESTILOS GLOBAIS DE FORÇAMENTO
         const tempElement = document.createElement('div');
         tempElement.appendChild(contentWrapper);
         
+        // FORÇA FUNDO BRANCO E TEXTO PRETO NO ELEMENTO PAI ANTES DA CAPTURA
+        tempElement.style.backgroundColor = '#ffffff';
+        tempElement.style.color = '#000000';
         tempElement.style.position = 'absolute';
         tempElement.style.top = '0';
         tempElement.style.left = '-9999px';
@@ -844,7 +853,7 @@
             html2canvas: { 
                 scale: 2, 
                 letterRendering: true, 
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff' // Repetindo a cor do fundo aqui
             }, 
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
