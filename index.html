@@ -824,10 +824,10 @@
             </div>
         `;
 
-        // Cria um elemento temporário para garantir que o html2pdf capture os estilos corrigidos
+        // 🛑 CORREÇÃO PRINCIPAL: Cria e usa um elemento DOM temporário para renderizar o HTML com os estilos corretos
         const tempElement = document.createElement('div');
         tempElement.innerHTML = htmlContent;
-        // Oculta o elemento da tela
+        // Oculta o elemento da tela (mas precisa estar no DOM para o html2canvas funcionar bem)
         tempElement.style.position = 'absolute';
         tempElement.style.left = '-9999px';
         document.body.appendChild(tempElement);
@@ -838,11 +838,12 @@
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
                 scale: 2, // Mantém a escala para boa resolução
-                letterRendering: true // CORREÇÃO: Melhora o renderização de texto
+                letterRendering: true // CORREÇÃO: Melhora a renderização de texto
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
+        // Usa o elemento DOM temporário
         html2pdf().from(tempElement).set(options).save().then(() => {
             // Remove o elemento temporário após a geração
             document.body.removeChild(tempElement);
@@ -874,7 +875,7 @@
         let totalValueHtml = '';
         if (totalValue) {
             totalValueHtml = `
-                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid;">
+                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid; color: #1a202c;">
                     <h4 style="font-size: 1.2em; color: #065f46; margin: 0;">VALOR TOTAL DE SERVIÇOS (30 DIAS):</h4>
                     <p style="font-size: 1.5em; font-weight: bold; color: #065f46; margin-top: 5px;">${totalValue}</p>
                 </div>
@@ -886,7 +887,7 @@
         const content = document.createElement('div');
         content.style.padding = '20px';
         content.style.fontFamily = 'Arial, sans-serif';
-        content.style.color = '#1f2937'; 
+        content.style.color = '#1a202c'; // CORREÇÃO: Força a cor do texto principal
         content.style.backgroundColor = '#ffffff'; // CORREÇÃO: Força o fundo branco
         
         content.innerHTML = `
@@ -916,12 +917,13 @@
 
 
             const ticketHtml = `
-                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                    <p style="font-weight: bold; color: #1f2937; margin: 0 0 8px 0;">
+                <div style="border: 1px solid #e5e7eb; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #f9f9f9; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    <p style="font-weight: bold; color: #1a202c; margin: 0 0 8px 0;">
                         ${index + 1}. Protocolo: ${ticket.protocol} 
                         <span style="float: right; font-weight: normal; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 3px 8px; border-radius: 4px; font-size: 0.8em;">${statusText}</span>
                     </p>
-                    <div style="font-size: 0.9em; line-height: 1.5; color: #1f2937;"> <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
+                    <div style="font-size: 0.9em; line-height: 1.5; color: #1a202c;">
+                        <p style="margin: 2px 0;"><strong>Solicitante:</strong> ${requesterName}</p>
                         <p style="margin: 2px 0;"><strong>Aberto em:</strong> ${createdAtDate}</p>
                         <p style="margin: 2px 0;"><strong>Descrição do Problema:</strong> ${ticketDescription}</p>
                         ${serviceSummary} 
@@ -942,11 +944,11 @@
                     <tr>
                         <td style="width: 50%; text-align: center; padding: 0 10px;">
                             <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 5px; font-size: 0.9em; color: #1f2937;">Assinatura do Responsável T.I.</p>
+                            <p style="margin-top: 5px; font-size: 0.9em; color: #1a202c;">Assinatura do Responsável T.I.</p>
                         </td>
                         <td style="width: 50%; text-align: center; padding: 0 10px;">
                             <div style="height: 30px;"></div> <div style="border-top: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                            <p style="margin-top: 5px; font-size: 0.9em; color: #1f2937;">Assinatura do Cliente/Gestor</p>
+                            <p style="margin-top: 5px; font-size: 0.9em; color: #1a202c;">Assinatura do Cliente/Gestor</p>
                         </td>
                     </tr>
                 </table>
@@ -965,6 +967,7 @@
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
+        // Usa o elemento DOM com os estilos forçados
         html2pdf().from(content).set(options).save();
         alert('Relatório consolidado gerado com sucesso!');
     }
