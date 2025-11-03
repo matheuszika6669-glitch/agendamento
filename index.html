@@ -23,14 +23,12 @@
         }
         
         /* Estilos CSS CRÍTICOS para o PDF: Força o fundo branco e texto escuro para o html2canvas */
-        /* Importante para que o PDF não pegue o fundo escuro do dashboard */
         .pdf-content-wrapper {
             background-color: #ffffff !important; 
             color: #1a202c !important; 
             padding: 20px;
             font-family: Arial, sans-serif;
-            /* Garante quebra de página entre relatórios */
-            page-break-after: always;
+            page-break-after: always; /* Garante quebra de página entre relatórios */
         }
     </style>
 </head>
@@ -475,7 +473,7 @@
                 actions += `<button onclick="openCloseTicketModal('${ticket.id}', '${ticket.protocol}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm mr-2">Encerrar</button>`;
             }
             
-            // Botão PDF Individual (mantido para testes rápidos, mas o principal é o Relatório Personalizado)
+            // Botão PDF Individual
             actions += `<button onclick="generateTicketPDF('${ticket.id}')" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm mr-2">PDF</button>`;
 
             actions += `<button onclick="deleteTicket('${ticket.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Excluir</button>`;
@@ -737,7 +735,7 @@
                  return;
             }
 
-            const fileExt = file.name.split('.pop()');
+            const fileExt = file.name.split('.').pop(); // CORRIGIDO: Removido o '.pop()' duplo
             const filePath = `${currentUser.id}/${protocol}-${Date.now()}.${fileExt}`;
             const bucketName = 'ticket_attachments'; 
             
@@ -897,6 +895,8 @@
     async function generateSelectedTicketsPDF() {
         
         const totalValue = document.getElementById('totalValueReport').value.trim(); 
+        
+        // **CORREÇÃO CRÍTICA AQUI:** Buscamos todos os inputs do tipo checkbox dentro da lista
         const selectedCheckboxes = document.querySelectorAll('#ticketSelectionList input[type="checkbox"]:checked');
         
         if (selectedCheckboxes.length === 0) {
@@ -904,22 +904,25 @@
             return;
         }
 
-        reportModal.classList.add('hidden');
-        
         // Mapeia os IDs selecionados
         const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.id);
-
-        // Filtra os tickets do cache (cachedTickets foi populado em openTicketSelectionModal)
+        
+        // Filtra os tickets do cache. CRÍTICO: cachedTickets deve ter sido populado
+        if (cachedTickets.length === 0) {
+             alert('Erro interno: A lista de chamados disponíveis está vazia. Tente reabrir o modal.');
+             return;
+        }
+        
         const ticketsToGenerate = cachedTickets.filter(ticket => selectedIds.includes(ticket.id));
         
         if (ticketsToGenerate.length === 0) {
-             alert('Nenhum ticket válido encontrado entre os selecionados. Tente novamente.');
+             alert('Nenhum ticket válido encontrado entre os selecionados. Tente reabrir o modal.');
              return;
         }
 
-
+        reportModal.classList.add('hidden');
+        
         const contentWrapper = document.createElement('div');
-        // Garante que o CSS de fundo branco e texto escuro será aplicado
         contentWrapper.style.backgroundColor = '#ffffff'; 
         contentWrapper.style.color = '#1a202c'; 
 
@@ -950,7 +953,7 @@
 
         // 2. Concatena os relatórios de tickets (um por página)
         ticketsToGenerate.forEach(ticket => {
-             // Usa a mesma lógica de formatação do PDF individual
+             // Replicamos a lógica de formatação de relatório individual aqui
              const statusText = ticket.status.toUpperCase().replace('_', ' ');
              const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
              
