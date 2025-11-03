@@ -25,7 +25,7 @@
         /* Estilos CSS CRÍTICOS para o PDF: Força o fundo branco e texto escuro para o html2canvas */
         .pdf-content-wrapper {
             background-color: #ffffff !important; 
-            color: #1a202c !important; 
+            color: #1a202c !important; /* Força cor do texto principal para preto */
             padding: 20px;
             font-family: Arial, sans-serif;
             page-break-after: always; /* Garante quebra de página entre relatórios */
@@ -301,7 +301,7 @@
 <script>
     // Configuração do Supabase
     const supabaseUrl = 'https://ezdzvblxyddwxreyowyh.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI3xRJ88z31rFUw4ls'; 
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV6ZHp2Ymx4eWRkd3hyZXlvd3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzI3OTEsImV4cCI6MjA3NTAwODc5MX0._b0Vut7nJfhrIqekY8VItrpDrI23xRJ88z31rFUw4ls'; 
 
     // Inicialização do Supabase
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey); 
@@ -629,6 +629,98 @@
         
         generateConsolidatedReportPDF(totalValue, companyInfo);
     });
+    
+    // Geração de PDF Individual (Mantida apenas para o botão "PDF" da tabela)
+    async function generateTicketPDF(ticketId) {
+        const { data: ticket, error } = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('id', ticketId)
+            .single();
+
+        if (error || !ticket) {
+            alert('Erro ao buscar detalhes do chamado.');
+            return;
+        }
+        
+        const statusText = ticket.status.toUpperCase().replace('_', ' ');
+        const dateCreated = new Date(ticket.created_at).toLocaleDateString('pt-BR');
+        
+        const serviceDetailsHtml = ticket.service_details 
+            ? `
+                <p style="font-weight: bold; margin-top: 20px; color: #3b82f6 !important;">SERVIÇO REALIZADO E VALOR:</p>
+                <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe !important; color: #1a202c !important;">
+                    ${ticket.service_details.replace(/\n/g, '<br>')}
+                </div>
+              `
+            : '<p style="margin-top: 20px; color: #1a202c !important;"><strong>Serviço/Valor:</strong> Não Informado (Feche o chamado com detalhes para incluir esta seção).</p>';
+
+
+        // 1. Cria o elemento div com o conteúdo
+        const content = document.createElement('div');
+        content.className = 'pdf-content-wrapper'; // Aplica o estilo crítico
+        content.style.pageBreakAfter = 'auto'; // Garante quebra apenas na versão em lote
+        content.innerHTML = `
+            <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
+                <h1 style="color: #3b82f6 !important; margin: 0;">Relatório do Chamado T.I</h1>
+                <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c !important;">Protocolo: ${ticket.protocol}</p>
+            </div>
+            <p style="color: #1a202c !important;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+            <p style="color: #1a202c !important;"><strong>Aberto em:</strong> ${dateCreated}</p>
+            <p style="color: #1a202c !important;"><strong>Status:</strong> ${statusText}</p>
+            
+            <p style="font-weight: bold; margin-top: 20px; color: #1a202c !important;">DESCRIÇÃO DO PROBLEMA:</p>
+            <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9 !important; color: #1a202c !important;">
+                ${ticket.description.replace(/\n/g, '<br>')}
+            </div>
+
+            ${serviceDetailsHtml}
+
+            <p style="margin-top: 15px; color: #1a202c !important;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6 !important;">Ver Anexo</a>` : 'Não'}</p>
+            
+            <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
+                <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
+                <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c !important;">Assinatura (T.I. e Cliente/Gestor)</p>
+                <p style="font-size: 0.8em; color: #6b7280 !important;">Espaço ampliado para inserção digital após download.</p>
+            </div>
+        `;
+
+        // 2. CRÍTICO: Adiciona à página fora da tela para garantir a renderização
+        const tempElement = document.createElement('div');
+        tempElement.appendChild(content);
+        tempElement.style.position = 'absolute';
+        tempElement.style.top = '0';
+        tempElement.style.left = '-9999px';
+        tempElement.style.width = '210mm'; 
+        document.body.appendChild(tempElement); 
+        
+        // 3. CRÍTICO: Pausa forçada de 50ms para renderização
+        await new Promise(resolve => setTimeout(resolve, 50)); 
+        
+        const options = {
+            margin: 10,
+            filename: `${ticket.protocol}.pdf`,
+            html2canvas: { 
+                scale: 2, 
+                letterRendering: true, 
+                backgroundColor: '#ffffff'
+            }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // 4. Gera o PDF e remove o elemento temporário
+        html2pdf().from(tempElement).set(options).save().then(() => {
+            document.body.removeChild(tempElement); 
+        }).catch(err => {
+             if (document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement);
+             }
+             console.error("Erro ao gerar PDF:", err);
+             alert("Ocorreu um erro ao gerar o PDF. Verifique o console.");
+        });
+    }
+    window.generateTicketPDF = generateTicketPDF;
+
 
     // 3.3 Função de busca e consolidação (CRÍTICA)
     async function generateConsolidatedReportPDF(totalValue, companyInfo) {
@@ -663,26 +755,26 @@
         // 2. CRIA A PRIMEIRA PÁGINA: CABEÇALHO CONSOLIDADO (Contém CNPJ/Nome e Valor Total)
         let consolidatedHeader = `
             <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; color: #1a202c;">
-                    <h1 style="color: #3b82f6; margin: 0; font-size: 1.8em;">RELATÓRIO DE SERVIÇOS T.I.</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #4b5563;">${companyInfo}</p>
-                    <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Total de Chamados: ${tickets.length}</p>
+                <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; color: #1a202c !important;">
+                    <h1 style="color: #3b82f6 !important; margin: 0; font-size: 1.8em;">RELATÓRIO DE SERVIÇOS T.I.</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #4b5563 !important;">${companyInfo}</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #4b5563 !important;">Gerado em: ${new Date().toLocaleDateString('pt-BR')} - Total de Chamados: ${tickets.length}</p>
                 </div>
         `;
         
         if (totalValue) {
             consolidatedHeader += `
-                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid; color: #1a202c;">
-                    <h4 style="font-size: 1.2em; color: #065f46; margin: 0;">VALOR TOTAL DE SERVIÇOS NO PERÍODO:</h4>
-                    <p style="font-size: 1.5em; font-weight: bold; color: #065f46; margin-top: 5px;">${totalValue}</p>
+                <div style="margin-top: 30px; padding: 15px; background-color: #d1fae5 !important; border: 2px solid #34d399; border-radius: 8px; page-break-inside: avoid; color: #1a202c !important;">
+                    <h4 style="font-size: 1.2em; color: #065f46 !important; margin: 0;">VALOR TOTAL DE SERVIÇOS NO PERÍODO:</h4>
+                    <p style="font-size: 1.5em; font-weight: bold; color: #065f46 !important; margin-top: 5px;">${totalValue}</p>
                 </div>
             `;
         } else {
-             consolidatedHeader += `<p style="margin-top: 30px; color: #888; font-style: italic;">Valor total não informado para este relatório.</p>`;
+             consolidatedHeader += `<p style="margin-top: 30px; color: #888 !important; font-style: italic;">Valor total não informado para este relatório.</p>`;
         }
         
         consolidatedHeader += `
-            <p style="margin-top: 30px; font-style: italic; color: #4b5563;">Os relatórios individuais detalhados seguem nas próximas páginas.</p>
+            <p style="margin-top: 30px; font-style: italic; color: #4b5563 !important;">Os relatórios individuais detalhados seguem nas próximas páginas.</p>
             </div>
         `;
         contentWrapper.innerHTML += consolidatedHeader;
@@ -695,36 +787,36 @@
              
              const serviceDetailsHtml = ticket.service_details 
                  ? `
-                     <p style="font-weight: bold; margin-top: 20px; color: #3b82f6;">SERVIÇO REALIZADO E VALOR:</p>
-                     <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe; color: #1a202c;">
+                     <p style="font-weight: bold; margin-top: 20px; color: #3b82f6 !important;">SERVIÇO REALIZADO E VALOR:</p>
+                     <div style="border: 1px solid #3b82f6; padding: 10px; margin-top: 5px; background-color: #e0f2fe !important; color: #1a202c !important;">
                          ${ticket.service_details.replace(/\n/g, '<br>')}
                      </div>
                    `
-                 : '<p style="margin-top: 20px; color: #1a202c;"><strong>Serviço/Valor:</strong> Não Informado.</p>';
+                 : '<p style="margin-top: 20px; color: #1a202c !important;"><strong>Serviço/Valor:</strong> Não Informado.</p>';
 
             contentWrapper.innerHTML += `
                 <div class="pdf-content-wrapper" style="page-break-after: always; padding: 20px;">
-                    <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; color: #1a202c;">
-                        <h1 style="color: #3b82f6; margin: 0;">Relatório do Chamado T.I</h1>
-                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c;">Protocolo: ${ticket.protocol}</p>
+                    <div style="text-align: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; color: #1a202c !important;">
+                        <h1 style="color: #3b82f6 !important; margin: 0;">Relatório do Chamado T.I</h1>
+                        <p style="margin: 5px 0 0 0; font-size: 0.9em; color: #1a202c !important;">Protocolo: ${ticket.protocol}</p>
                     </div>
-                    <p style="color: #1a202c;"><strong>Solicitante:</strong> ${ticket.requester}</p>
-                    <p style="color: #1a202c;"><strong>Aberto em:</strong> ${dateCreated}</p>
-                    <p style="color: #1a202c;"><strong>Status:</strong> ${statusText}</p>
+                    <p style="color: #1a202c !important;"><strong>Solicitante:</strong> ${ticket.requester}</p>
+                    <p style="color: #1a202c !important;"><strong>Aberto em:</strong> ${dateCreated}</p>
+                    <p style="color: #1a202c !important;"><strong>Status:</strong> ${statusText}</p>
                     
-                    <p style="font-weight: bold; margin-top: 20px; color: #1a202c;">DESCRIÇÃO DO PROBLEMA:</p>
-                    <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9; color: #1a202c;">
+                    <p style="font-weight: bold; margin-top: 20px; color: #1a202c !important;">DESCRIÇÃO DO PROBLEMA:</p>
+                    <div style="border: 1px solid #eee; padding: 10px; margin-top: 5px; background-color: #f9f9f9 !important; color: #1a202c !important;">
                         ${ticket.description.replace(/\n/g, '<br>')}
                     </div>
 
                     ${serviceDetailsHtml}
 
-                    <p style="margin-top: 15px; color: #1a202c;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6;">Ver Anexo</a>` : 'Não'}</p>
+                    <p style="margin-top: 15px; color: #1a202c !important;"><strong>Anexo:</strong> ${ticket.attachment_url ? `<a href="${ticket.attachment_url}" target="_blank" style="color: #3b82f6 !important;">Ver Anexo</a>` : 'Não'}</p>
                     
                     <div style="margin-top: 80px; text-align: center; padding-top: 20px; page-break-before: auto;">
-                        <div style="width: 300px; height: 1px; border-top: 1px solid #000; margin: 30px auto 5px auto;"></div> 
-                        <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c;">Assinatura (T.I. e Cliente/Gestor)</p>
-                        <p style="font-size: 0.8em; color: #6b7280;">Espaço ampliado para inserção digital após download.</p>
+                        <div style="width: 300px; height: 1px; border-top: 1px solid #000 !important; margin: 30px auto 5px auto;"></div> 
+                        <p style="font-size: 0.9em; margin-top: 5px; color: #1a202c !important;">Assinatura (T.I. e Cliente/Gestor)</p>
+                        <p style="font-size: 0.8em; color: #6b7280 !important;">Espaço ampliado para inserção digital após download.</p>
                     </div>
                 </div>
             `;
